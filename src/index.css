@@ -1,0 +1,100 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --bg-ivory: #F5F1E8;
+    --text-charcoal: #141414;
+    --bg-dark-obsidian: #121212;
+    --bronze-gold: #B8973E;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: #F5F1E8;
+    color: #141414;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    overflow-x: hidden;
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
+
+  html.dark body {
+    background-color: #121212;
+    color: #F5F1E8;
+  }
+}
+
+.font-display {
+  font-family: 'Cinzel', Georgia, serif;
+}
+
+.font-sans {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+/* Custom Bronze/Gold Gradient text */
+.gold-gradient-text {
+  background: linear-gradient(135deg, #B8973E 0%, #D4AF37 50%, #8A6D2B 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.dark .gold-gradient-text {
+  background: linear-gradient(135deg, #FFF0C2 0%, #D4AF37 50%, #A27B13 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Global Strict CTA styles - BroCodes Circular Tech Aesthetic */
+.btn-whatsapp {
+  background-color: #25D366;
+  color: #FFFFFF;
+}
+.btn-whatsapp:hover {
+  background-color: #20BA59;
+}
+
+.btn-facebook {
+  background-color: #1877F2;
+  color: #FFFFFF;
+}
+.btn-facebook:hover {
+  background-color: #1565CC;
+}
+
+.btn-call {
+  background-color: #000000;
+  color: #FFFFFF;
+}
+.btn-call:hover {
+  background-color: #1A1A1A;
+}
+
+.dark .btn-call {
+  background-color: #FFFFFF;
+  color: #000000;
+}
+.dark .btn-call:hover {
+  background-color: #E5E5E5;
+}
+
+/* Perfect Circular Buttons - strictly icon-only, zero text inside */
+.cta-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  aspect-ratio: 1 / 1;
+  flex-shrink: 0;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, opacity 0.2s ease;
+  user-select: none;
+}
+.cta-circle:hover {
+  transform: scale(1.08);
+}
+.cta-circle:active {
+  transform: scale(0.94);
+}
