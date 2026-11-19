@@ -1,5 +1,8 @@
-import { useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { AnimatePresence, motion } from 'motion/react';
 import { ThemeProvider } from './context/ThemeContext';
+import AnimatedBackground from './components/AnimatedBackground';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import TrustStrip from './components/TrustStrip';
@@ -11,9 +14,121 @@ import Reviews from './components/Reviews';
 import LocationHub from './components/LocationHub';
 import Footer from './components/Footer';
 import BookingModal from './components/BookingModal';
-import StickyMobileBar from './components/StickyMobileBar';
+import FloatingSideCTA from './components/FloatingSideCTA';
 import { SALON_INFO } from './data/salonData';
-import { createWhatsAppUrl, openExternalUrl } from './utils/booking';
+import { buildHinglishWhatsAppMessage, createWhatsAppUrl, openExternalUrl } from './utils/booking';
+
+function PageTransition({ children }: { children: ReactNode }) {
+  return (
+    <div className="bg-transparent">
+      {children}
+    </div>
+  );
+}
+
+interface AppContentProps {
+  onOpenBooking: (serviceId?: string, note?: string) => void;
+  onOpenWhatsAppDirect: () => void;
+  onSelectLookbookStyle: (styleTitle: string) => void;
+}
+
+function AppRoutes({
+  onOpenBooking,
+  onOpenWhatsAppDirect,
+  onSelectLookbookStyle,
+}: AppContentProps) {
+  const location = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [location.pathname]);
+
+  return (
+    <div className="min-h-screen bg-transparent text-[#141413] dark:text-[#F4F1EA] flex flex-col selection:bg-[#C5A059] selection:text-white">
+      {/* Mounted ONCE right above <Routes> */}
+      <AnimatedBackground />
+
+      <Navbar />
+
+      <main className="flex-1 bg-transparent">
+        <AnimatePresence mode="wait">
+          <Routes location={location} key={location.pathname}>
+            {/* Route 1: / (Showcase) */}
+            <Route
+              path="/"
+              element={
+                <PageTransition>
+                  <Hero onOpenBooking={() => onOpenBooking()} />
+                  <TrustStrip />
+                  <Craftsmanship
+                    onOpenBooking={() => onOpenBooking('sig-cut', 'Face-Shape Consultation')}
+                  />
+                  <ServiceMenu
+                    onSelectServiceModal={(serviceId) => onOpenBooking(serviceId)}
+                  />
+                  <ConsultationQuiz />
+                  <Lookbook onSelectStyle={onSelectLookbookStyle} />
+                  <Reviews />
+                  <LocationHub onOpenWhatsApp={onOpenWhatsAppDirect} />
+                </PageTransition>
+              }
+            />
+
+            {/* Route 2: /craftsman (Master Barber & Hygiene Architecture) */}
+            <Route
+              path="/craftsman"
+              element={
+                <PageTransition>
+                  <Craftsmanship
+                    onOpenBooking={() => onOpenBooking('sig-cut', 'Face-Shape Consultation')}
+                  />
+                  <TrustStrip />
+                  <ConsultationQuiz />
+                  <Reviews />
+                </PageTransition>
+              }
+            />
+
+            {/* Route 3: /menu (Service Menu & Session Planner) */}
+            <Route
+              path="/menu"
+              element={
+                <PageTransition>
+                  <ServiceMenu
+                    onSelectServiceModal={(serviceId) => onOpenBooking(serviceId)}
+                  />
+                  <TrustStrip />
+                  <ConsultationQuiz />
+                </PageTransition>
+              }
+            />
+
+            {/* Route 4: /salon (Salon Lookbook, Hygiene & Location Hub) */}
+            <Route
+              path="/salon"
+              element={
+                <PageTransition>
+                  <Lookbook onSelectStyle={onSelectLookbookStyle} />
+                  <Reviews />
+                  <LocationHub onOpenWhatsApp={onOpenWhatsAppDirect} />
+                </PageTransition>
+              }
+            />
+
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </AnimatePresence>
+      </main>
+
+      <Footer
+        onOpenBooking={() => onOpenBooking()}
+        onOpenWhatsApp={onOpenWhatsAppDirect}
+      />
+
+      <FloatingSideCTA onOpenWhatsApp={onOpenWhatsAppDirect} />
+    </div>
+  );
+}
 
 export default function App() {
   const [isBookingOpen, setIsBookingOpen] = useState(false);
@@ -27,7 +142,7 @@ export default function App() {
   };
 
   const handleOpenWhatsAppDirect = () => {
-    const defaultMsg = `Hello Shivangi Hair Salon, I would like to inquire about booking a chair at your Bhopal studio (Bhensakhedi Road). Could you please let me know current availability?`;
+    const defaultMsg = buildHinglishWhatsAppMessage('Signature Haircut & Skin Fade');
     const url = createWhatsAppUrl(SALON_INFO.rawPhone, defaultMsg);
     openExternalUrl(url);
   };
@@ -38,67 +153,20 @@ export default function App() {
 
   return (
     <ThemeProvider>
-      <div className="min-h-screen bg-[#F5F1E8] dark:bg-[#121212] text-[#141414] dark:text-[#EAE5DC] flex flex-col selection:bg-[#B8973E] selection:text-white transition-colors duration-250">
-        
-        {/* 1. Header & Navigation (Logo, Light/Dark Switch, Emoji Only) */}
-        <Navbar />
-
-        <main className="flex-1">
-          {/* 2. Full-Bleed Cinematic Hero Showcase with Floating Circular Green WhatsApp CTA */}
-          <Hero 
-            onOpenBooking={() => handleOpenBooking()} 
-          />
-
-          {/* 3. The Trust Strip (4.9★, UV Sterilized, Fresh Blades, Walk-ins) */}
-          <TrustStrip />
-
-          {/* 4. Master Barber Editorial Spotlight ("The hands behind the fade. 8+ years of structural hair architecture.") */}
-          <Craftsmanship 
-            onOpenBooking={() => handleOpenBooking('sig-cut', 'Bespoke Face-Shape Consultation')} 
-          />
-
-          {/* 5. Transparent Service Menu (Stark Table Layout & Circular WhatsApp CTAs) */}
-          <ServiceMenu 
-            onSelectServiceModal={(serviceId) => handleOpenBooking(serviceId)} 
-          />
-
-          {/* 6. "Find Your Look" Face-Shape Consultation Widget */}
-          <ConsultationQuiz />
-
-          {/* 7. Visual Proof & Authentic Gallery + Follow on Facebook (Circular Blue) CTA */}
-          <Lookbook 
-            onSelectStyle={handleSelectLookbookStyle} 
-          />
-
-          {/* 8. Verified Social Proof & Hygiene Promise (Clinical steel, 4 reviews) */}
-          <Reviews />
-
-          {/* 9. Location Hub (Address, Tuesday Closed highlight, Google Maps) */}
-          <LocationHub 
-            onOpenWhatsApp={handleOpenWhatsAppDirect} 
-          />
-        </main>
-
-        {/* Quiet Luxury Footer */}
-        <Footer 
-          onOpenBooking={() => handleOpenBooking()} 
-          onOpenWhatsApp={handleOpenWhatsAppDirect} 
+      <BrowserRouter>
+        <AppRoutes
+          onOpenBooking={handleOpenBooking}
+          onOpenWhatsAppDirect={handleOpenWhatsAppDirect}
+          onSelectLookbookStyle={handleSelectLookbookStyle}
         />
 
-        {/* Sticky Mobile Bottom Bar: 3 Circular FABs - Call (Black), WhatsApp (Green), Facebook (Blue) */}
-        <StickyMobileBar 
-          onOpenWhatsApp={handleOpenWhatsAppDirect} 
-        />
-
-        {/* Direct Booking Modal */}
         <BookingModal
           isOpen={isBookingOpen}
           onClose={() => setIsBookingOpen(false)}
           preSelectedServiceId={preSelectedServiceId}
           initialNote={bookingNote}
         />
-
-      </div>
+      </BrowserRouter>
     </ThemeProvider>
   );
 }

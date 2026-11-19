@@ -1,12 +1,44 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Shivangi Hair Salon - Premier Men's Grooming Studio Bhopal</title>
-    <meta name="description" content="Premier men's grooming & barber studio in Bhopal. Tailored precision haircuts, beard sculpting, razor detailing, and scalp therapy." />
-    <meta property="og:title" content="Shivangi Hair Salon - Premier Men's Grooming Studio Bhopal" />
-    <meta property="og:description" content="Premier men's grooming & barber studio in Bhopal. Tailored precision haircuts, beard sculpting, razor detailing, and scalp therapy." />
+    <script>
+      (function() {
+        // Fix: Browser extensions (such as Urban VPN proxy interceptors) execute `window.fetch = ...`
+        // In certain iframe and strict browser contexts, window.fetch has only a getter.
+        // We define both a getter and a setter so extension interceptors and monkey-patches execute without throwing.
+        try {
+          var currentFetch = window.fetch;
+          Object.defineProperty(window, 'fetch', {
+            get: function() {
+              return currentFetch;
+            },
+            set: function(val) {
+              currentFetch = val;
+            },
+            configurable: true,
+            enumerable: true
+          });
+        } catch (e) {}
+
+        // Isolate third-party browser extension content script errors from bubbling to app host
+        window.addEventListener('error', function(e) {
+          if (
+            e.filename &&
+            (e.filename.indexOf('chrome-extension://') !== -1 ||
+             e.filename.indexOf('moz-extension://') !== -1)
+          ) {
+            e.stopImmediatePropagation();
+            e.preventDefault();
+          }
+        }, true);
+      })();
+    </script>
+    <title>Shivangi Hair Salon - Men's Grooming Salon · Near Fitness Planet, Bhensakhedi Road, Bhopal</title>
+    <meta name="description" content="Shivangi Hair Salon (Near Fitness Planet, Bhensakhedi Road, Bhopal). Precision haircuts, skin fades, beard detailing, and hot towel shaves starting from ₹100." />
+    <meta property="og:title" content="Shivangi Hair Salon - Near Fitness Planet, Bhensakhedi Road, Bhopal" />
+    <meta property="og:description" content="Shivangi Hair Salon (Near Fitness Planet, Bhensakhedi Road, Bhopal). Precision haircuts, skin fades, beard detailing, and hot towel shaves starting from ₹100." />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />

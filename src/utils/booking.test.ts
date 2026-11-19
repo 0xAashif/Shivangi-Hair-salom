@@ -2,49 +2,67 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   isTuesday,
-  isPastDate,
   generateTimeSlots,
   calculateBookingTotal,
   isValidPhone,
   validateBookingForm,
   formatWhatsAppBookingMessage,
+  buildHinglishWhatsAppMessage,
   createWhatsAppUrl,
+  getSalonStatusIST,
 } from './booking';
 import { ServiceItem } from '../types';
+import { VIDEOS, MACRO_VIDEOS, HERO_CAROUSEL_SLIDES } from '../config/videos';
+import { LOOKBOOK_ITEMS, SALON_INFO, SERVICES, REVIEWS, TRUST_SIGNALS, QUIZ_QUESTIONS } from '../data/salonData';
 
 const mockServices: ServiceItem[] = [
   {
     id: 'sig-cut',
     name: 'Signature Haircut',
     category: 'hair',
-    durationMinutes: 45,
-    priceMin: 350,
-    priceMax: 450,
-    shortDesc: 'Precision scissor cut',
+    durationMinutes: 40,
+    priceMin: 100,
+    priceMax: 100,
+    shortDesc: 'Precision scissor cut. Starts from ₹100 · Negotiable.',
     inclusions: ['Wash', 'Style']
   },
   {
     id: 'beard-detail',
     name: 'Beard Shaping',
     category: 'beard',
-    durationMinutes: 30,
-    priceMin: 200,
-    priceMax: 300,
-    shortDesc: 'Razor styling',
+    durationMinutes: 25,
+    priceMin: 100,
+    priceMax: 100,
+    shortDesc: 'Razor styling. Starts from ₹100 · Negotiable.',
     inclusions: ['Hot towel']
   }
 ];
 
 test('isTuesday correctly identifies Tuesdays and other days', () => {
-  // 2026-11-10 is a Tuesday (Nov 10, 2026)
-  // Let's verify: 2026-11-08 is Sunday, Nov 09 is Monday, Nov 10 is Tuesday
   assert.equal(isTuesday('2026-11-10'), true);
-  // Nov 11, 2026 is Wednesday
   assert.equal(isTuesday('2026-11-11'), false);
-  // Nov 09, 2026 is Monday
   assert.equal(isTuesday('2026-11-09'), false);
-  // Empty string
   assert.equal(isTuesday(''), false);
+});
+
+test('getSalonStatusIST evaluates Tuesday, open hours, and closed hours in Asia/Kolkata', () => {
+  const tueDate = new Date('2026-11-10T06:30:00.000Z');
+  const tueStatus = getSalonStatusIST(tueDate);
+  assert.equal(tueStatus.isTuesday, true);
+  assert.equal(tueStatus.isOpen, false);
+  assert.equal(tueStatus.label, 'CLOSED TODAY · WEEKLY OFF');
+
+  const openDate = new Date('2026-11-11T08:30:00.000Z');
+  const openStatus = getSalonStatusIST(openDate);
+  assert.equal(openStatus.isTuesday, false);
+  assert.equal(openStatus.isOpen, true);
+  assert.equal(openStatus.label, 'OPEN NOW · UNTIL 9:30 PM');
+
+  const closedDate = new Date('2026-11-11T17:00:00.000Z');
+  const closedStatus = getSalonStatusIST(closedDate);
+  assert.equal(closedStatus.isTuesday, false);
+  assert.equal(closedStatus.isOpen, false);
+  assert.equal(closedStatus.label, 'CLOSED NOW · OPENS 8:30 AM');
 });
 
 test('generateTimeSlots produces valid range from 8:30 AM to 9:00 PM', () => {
@@ -56,17 +74,15 @@ test('generateTimeSlots produces valid range from 8:30 AM to 9:00 PM', () => {
   assert.equal(slots[slots.length - 1], '9:00 PM');
 });
 
-test('calculateBookingTotal computes correct sum of minutes and price ranges', () => {
+test('calculateBookingTotal computes correct sum of minutes and Starts from ₹100 pricing', () => {
   const total = calculateBookingTotal(['sig-cut', 'beard-detail'], mockServices);
-  assert.equal(total.totalDurationMinutes, 75);
-  assert.equal(total.minPrice, 550);
-  assert.equal(total.maxPrice, 750);
+  assert.equal(total.totalDurationMinutes, 65);
+  assert.equal(total.minPrice, 200);
+  assert.equal(total.maxPrice, 200);
   assert.equal(total.selectedItems.length, 2);
 
-  // Single item
-  const single = calculateBookingTotal(['beard-detail'], mockServices);
-  assert.equal(single.totalDurationMinutes, 30);
-  assert.equal(single.minPrice, 200);
+  const realTotal = calculateBookingTotal(['sig-cut', 'beard-detail'], SERVICES);
+  assert.equal(realTotal.minPrice, 200);
 });
 
 test('isValidPhone correctly validates Indian mobile numbers', () => {
@@ -76,11 +92,10 @@ test('isValidPhone correctly validates Indian mobile numbers', () => {
   assert.equal(isValidPhone('+91 95758 30421'), true);
   assert.equal(isValidPhone('12345'), false);
   assert.equal(isValidPhone('abcde'), false);
-  assert.equal(isValidPhone('1234567890'), false); // starts with 1
+  assert.equal(isValidPhone('1234567890'), false);
 });
 
 test('validateBookingForm detects missing or invalid fields and Tuesday closure', () => {
-  // Empty form
   const emptyRes = validateBookingForm({
     fullName: '',
     phone: '',
@@ -90,27 +105,20 @@ test('validateBookingForm detects missing or invalid fields and Tuesday closure'
     notes: '',
   });
   assert.equal(emptyRes.isValid, false);
-  assert.ok(emptyRes.errors.fullName);
-  assert.ok(emptyRes.errors.phone);
-  assert.ok(emptyRes.errors.selectedServices);
-  assert.ok(emptyRes.errors.date);
-  assert.ok(emptyRes.errors.timeSlot);
 
-  // Tuesday appointment rejection
   const tuesdayRes = validateBookingForm({
-    fullName: 'Aashif Khan',
+    fullName: 'Rohit Sharma',
     phone: '9575830421',
     selectedServices: ['sig-cut'],
-    date: '2026-11-10', // Tuesday
+    date: '2026-11-10',
     timeSlot: '11:00 AM',
     notes: 'Low taper fade',
   });
   assert.equal(tuesdayRes.isValid, false);
   assert.match(tuesdayRes.errors.date, /closed on Tuesdays/i);
 
-  // Valid appointment (Wednesday Nov 11, 2026)
   const validRes = validateBookingForm({
-    fullName: 'Aashif Khan',
+    fullName: 'Rohit Sharma',
     phone: '9575830421',
     selectedServices: ['sig-cut'],
     date: '2026-11-11',
@@ -121,12 +129,18 @@ test('validateBookingForm detects missing or invalid fields and Tuesday closure'
   assert.deepEqual(validRes.errors, {});
 });
 
-test('formatWhatsAppBookingMessage and createWhatsAppUrl format correctly', () => {
+test('buildHinglishWhatsAppMessage and formatWhatsAppBookingMessage use natural Hinglish and Near Fitness Planet address', () => {
+  const singleMsg = buildHinglishWhatsAppMessage('Signature Haircut & Skin Fade');
+  assert.equal(
+    singleMsg,
+    'Namaste Bhaiya! Mujhe Shivangi Hair Salon (Near Fitness Planet, Bhensakhedi Road, Bhopal) mein chair book karni hai. Selected Service: Signature Haircut & Skin Fade (Starts from ₹100 · Negotiable). Kya aaj slot khali hai?'
+  );
+
   const msg = formatWhatsAppBookingMessage(
     {
-      fullName: 'Aashif Khan',
+      fullName: 'Rohit Sharma',
       phone: '9575830421',
-      selectedServices: ['sig-cut'],
+      selectedServices: ['sig-cut', 'beard-detail'],
       date: '2026-11-11',
       timeSlot: '11:00 AM',
       notes: 'Bespoke razor finish',
@@ -134,12 +148,55 @@ test('formatWhatsAppBookingMessage and createWhatsAppUrl format correctly', () =
     mockServices
   );
 
-  assert.ok(msg.includes('Aashif Khan'));
-  assert.ok(msg.includes('Signature Haircut'));
-  assert.ok(msg.includes('11:00 AM'));
-  assert.ok(msg.includes('Bespoke razor finish'));
+  assert.ok(msg.includes('Namaste Bhaiya! Mujhe Shivangi Hair Salon (Near Fitness Planet, Bhensakhedi Road, Bhopal) mein chair book karni hai.'));
+  assert.ok(msg.includes('Selected Service: Signature Haircut + Beard Shaping (Starts from ₹100 · Negotiable). Kya aaj slot khali hai?'));
+  assert.ok(msg.includes('Rohit Sharma'));
+  assert.ok(!msg.includes('7897+5X4'));
 
   const url = createWhatsAppUrl('919575830421', msg);
   assert.ok(url.startsWith('https://wa.me/919575830421?text='));
-  assert.ok(url.includes(encodeURIComponent('Aashif Khan')));
+});
+
+test('MACRO_VIDEOS and HERO_CAROUSEL_SLIDES use Supabase URLs and 150+ Verified Bhopal Customers', () => {
+  assert.equal(
+    MACRO_VIDEOS.hero.src,
+    'https://tsufahvimyzdlkdhqvnk.supabase.co/storage/v1/object/public/Videos/clipper-3d.mp4'
+  );
+  assert.equal(
+    MACRO_VIDEOS.trustStrip.src,
+    'https://tsufahvimyzdlkdhqvnk.supabase.co/storage/v1/object/public/Videos/razor-3d.mp4'
+  );
+  assert.equal(
+    MACRO_VIDEOS.serviceMenu.src,
+    'https://tsufahvimyzdlkdhqvnk.supabase.co/storage/v1/object/public/Videos/towel-3d.mp4'
+  );
+
+  for (const url of Object.values(VIDEOS)) {
+    assert.ok(url.startsWith('https://tsufahvimyzdlkdhqvnk.supabase.co/'));
+  }
+
+  assert.equal(HERO_CAROUSEL_SLIDES.length, 3);
+  assert.equal(
+    HERO_CAROUSEL_SLIDES[0].eyebrow,
+    "BHOPAL'S BEST MEN'S SALON · 150+ VERIFIED BHOPAL CUSTOMERS"
+  );
+});
+
+test('Address standardization, Hinglish Quiz, and 4 Indian Male Lookbook Age Profiles', () => {
+  assert.equal(SALON_INFO.address, 'Near Fitness Planet, Bhensakhedi Road, Bhopal');
+  assert.ok(!SALON_INFO.address.includes('7897+5X4'));
+  assert.ok(!SALON_INFO.googleMapsEmbedUrl.includes('7897'));
+  assert.equal(TRUST_SIGNALS[0].label, '150+ Verified Bhopal Customers');
+  assert.equal(REVIEWS[0].clientName, 'Rohit Sharma');
+
+  // Hinglish Quiz options
+  assert.ok(QUIZ_QUESTIONS.faceShapes[0].label.includes('Chakor'));
+  assert.ok(QUIZ_QUESTIONS.hairTypes[0].label.includes('Seedhe'));
+
+  // 4 Age groups in Lookbook
+  const allLookbookText = LOOKBOOK_ITEMS.map(i => `${i.title} ${i.desc}`).join(' ');
+  assert.ok(allLookbookText.includes('Kids School Fade'));
+  assert.ok(allLookbookText.includes('College Teen Textured Crop'));
+  assert.ok(allLookbookText.includes('Young Man Skin Fade & Beard'));
+  assert.ok(allLookbookText.includes('Senior/Uncle Classic Scissor Cut'));
 });

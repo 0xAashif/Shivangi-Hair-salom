@@ -122,38 +122,102 @@ export function validateBookingForm(data: BookingFormData): BookingValidationRes
 }
 
 /**
- * Formats a clean, professional booking message for WhatsApp.
+ * Real-time Asia/Kolkata (IST) salon open/closed status check.
+ * - Tuesday: "CLOSED TODAY · WEEKLY OFF"
+ * - Outside 8:30 AM – 9:30 PM IST: "CLOSED NOW · OPENS 8:30 AM"
+ * - Inside 8:30 AM – 9:30 PM IST (Wed–Mon): "OPEN NOW · UNTIL 9:30 PM"
+ */
+export function getSalonStatusIST(now: Date = new Date()): {
+  label: string;
+  isOpen: boolean;
+  isTuesday: boolean;
+} {
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Kolkata',
+    weekday: 'short',
+    hour: 'numeric',
+    minute: 'numeric',
+    hour12: false,
+  });
+
+  const parts = formatter.formatToParts(now);
+  const weekday = parts.find(p => p.type === 'weekday')?.value || '';
+  const hourStr = parts.find(p => p.type === 'hour')?.value || '0';
+  const minuteStr = parts.find(p => p.type === 'minute')?.value || '0';
+
+  const hour = Number(hourStr) % 24;
+  const minute = Number(minuteStr);
+  const totalMinutes = hour * 60 + minute;
+
+  // Open 8:30 AM (510 mins) to 9:30 PM (1290 mins)
+  const openMinutes = 8 * 60 + 30;
+  const closeMinutes = 21 * 60 + 30;
+
+  if (weekday === 'Tue') {
+    return {
+      label: 'CLOSED TODAY · WEEKLY OFF',
+      isOpen: false,
+      isTuesday: true,
+    };
+  }
+
+  if (totalMinutes < openMinutes || totalMinutes >= closeMinutes) {
+    return {
+      label: 'CLOSED NOW · OPENS 8:30 AM',
+      isOpen: false,
+      isTuesday: false,
+    };
+  }
+
+  return {
+    label: 'OPEN NOW · UNTIL 9:30 PM',
+    isOpen: true,
+    isTuesday: false,
+  };
+}
+
+/**
+ * Builds the standardized Hinglish pre-filled WhatsApp CTA message across the entire app.
+ */
+export function buildHinglishWhatsAppMessage(
+  serviceName: string = 'Haircut & Grooming'
+): string {
+  return `Namaste Bhaiya! Mujhe Shivangi Hair Salon (Near Fitness Planet, Bhensakhedi Road, Bhopal) mein chair book karni hai. Selected Service: ${serviceName} (Starts from ₹100 · Negotiable). Kya aaj slot khali hai?`;
+}
+
+/**
+ * Formats a clean, natural Hinglish booking message for WhatsApp with Starts from ₹100 · Negotiable pricing.
  */
 export function formatWhatsAppBookingMessage(
   data: BookingFormData,
   allServices: ServiceItem[]
 ): string {
-  const { selectedItems, totalDurationMinutes, minPrice, maxPrice } = calculateBookingTotal(
+  const { selectedItems, totalDurationMinutes } = calculateBookingTotal(
     data.selectedServices,
     allServices
   );
 
-  const serviceNames = selectedItems.map(s => `• ${s.name} (~${s.durationMinutes}m)`).join('\n');
-  const priceRange = minPrice === maxPrice ? `₹${minPrice}` : `₹${minPrice} - ₹${maxPrice}`;
+  const selectedNamesInline =
+    selectedItems.map(s => s.name).join(' + ') || 'Haircut & Grooming';
+
+  const serviceLines = selectedItems
+    .map(s => `• ${s.name} (~${s.durationMinutes}m) — Starts from ₹100 · Negotiable`)
+    .join('\n');
 
   return [
-    `*APPOINTMENT RESERVATION - SHIVANGI HAIR SALON*`,
-    `--------------------------------------`,
-    `👤 *Client Name:* ${data.fullName.trim()}`,
-    `📱 *Contact:* ${data.phone.trim()}`,
-    `📅 *Preferred Date:* ${data.date}`,
-    `⏰ *Preferred Time Slot:* ${data.timeSlot}`,
+    buildHinglishWhatsAppMessage(selectedNamesInline),
     ``,
-    `💈 *Selected Services:*`,
-    serviceNames || '• Consultation Required',
-    ``,
-    `⏱️ *Estimated Duration:* ~${totalDurationMinutes} minutes`,
-    `💰 *Estimated Investment:* ${priceRange}`,
-    data.notes ? `📝 *Notes/Preferences:* ${data.notes.trim()}` : ``,
-    ``,
-    `📍 *Location:* Near The Fitness Planet, Bhensakhedi Road, Bhopal`,
-    `Kindly confirm chair availability.`
-  ].filter(line => line !== null && line !== undefined).join('\n');
+    `*Client Name:* ${data.fullName.trim()}`,
+    `*Contact:* ${data.phone.trim()}`,
+    `*Preferred Date:* ${data.date}`,
+    `*Preferred Time Slot:* ${data.timeSlot}`,
+    `*Selected Services:*`,
+    serviceLines || '• Haircut & Grooming (Starts from ₹100 · Negotiable)',
+    `*Estimated Duration:* ~${totalDurationMinutes} minutes`,
+    `*Pricing:* Starts from ₹100 · Negotiable based on style & hair length`,
+    data.notes ? `*Notes/Preferences:* ${data.notes.trim()}` : ``,
+    `*Salon Location:* Near Fitness Planet, Bhensakhedi Road, Bhopal`,
+  ].filter(line => line !== null && line !== undefined && line !== '').join('\n');
 }
 
 /**
