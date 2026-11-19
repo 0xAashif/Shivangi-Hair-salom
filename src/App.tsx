@@ -1,6 +1,5 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { AnimatePresence, motion } from 'motion/react';
 import { ThemeProvider } from './context/ThemeContext';
 import AnimatedBackground from './components/AnimatedBackground';
 import Navbar from './components/Navbar';
@@ -19,15 +18,11 @@ import { SALON_INFO } from './data/salonData';
 import { buildHinglishWhatsAppMessage, createWhatsAppUrl, openExternalUrl } from './utils/booking';
 
 function PageTransition({ children }: { children: ReactNode }) {
-  return (
-    <div className="bg-transparent">
-      {children}
-    </div>
-  );
+  return <div className="bg-transparent">{children}</div>;
 }
 
 interface AppContentProps {
-  onOpenBooking: (serviceId?: string, note?: string) => void;
+  onOpenBooking: (serviceIds?: string | string[], note?: string) => void;
   onOpenWhatsAppDirect: () => void;
   onSelectLookbookStyle: (styleTitle: string) => void;
 }
@@ -44,80 +39,79 @@ function AppRoutes({
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen bg-transparent text-[#141413] dark:text-[#F4F1EA] flex flex-col selection:bg-[#C5A059] selection:text-white">
-      {/* Mounted ONCE right above <Routes> */}
+    <div className="min-h-screen bg-transparent text-[#141413] dark:text-[#F4F1EA] flex flex-col selection:bg-[#C5A059] selection:text-[#070709]">
       <AnimatedBackground />
 
-      <Navbar />
+      <Navbar onOpenBooking={() => onOpenBooking()} />
 
       <main className="flex-1 bg-transparent">
-        <AnimatePresence mode="wait">
-          <Routes location={location} key={location.pathname}>
-            {/* Route 1: / (Showcase) */}
-            <Route
-              path="/"
-              element={
-                <PageTransition>
-                  <Hero onOpenBooking={() => onOpenBooking()} />
-                  <TrustStrip />
-                  <Craftsmanship
-                    onOpenBooking={() => onOpenBooking('sig-cut', 'Face-Shape Consultation')}
-                  />
-                  <ServiceMenu
-                    onSelectServiceModal={(serviceId) => onOpenBooking(serviceId)}
-                  />
-                  <ConsultationQuiz />
-                  <Lookbook onSelectStyle={onSelectLookbookStyle} />
-                  <Reviews />
-                  <LocationHub onOpenWhatsApp={onOpenWhatsAppDirect} />
-                </PageTransition>
-              }
-            />
+        <Routes location={location} key={location.pathname}>
+          <Route
+            path="/"
+            element={
+              <PageTransition>
+                <Hero onOpenBooking={() => onOpenBooking()} />
+                <TrustStrip />
+                <Craftsmanship
+                  onOpenBooking={() => onOpenBooking('sig-cut', 'Face-Shape Consultation')}
+                />
+                <ServiceMenu
+                  onSelectServiceModal={(serviceIds) => onOpenBooking(serviceIds)}
+                />
+                <ConsultationQuiz
+                  onOpenBooking={(note) => onOpenBooking('sig-cut', note)}
+                />
+                <Lookbook onSelectStyle={onSelectLookbookStyle} />
+                <Reviews />
+                <LocationHub onOpenWhatsApp={onOpenWhatsAppDirect} />
+              </PageTransition>
+            }
+          />
 
-            {/* Route 2: /craftsman (Master Barber & Hygiene Architecture) */}
-            <Route
-              path="/craftsman"
-              element={
-                <PageTransition>
-                  <Craftsmanship
-                    onOpenBooking={() => onOpenBooking('sig-cut', 'Face-Shape Consultation')}
-                  />
-                  <TrustStrip />
-                  <ConsultationQuiz />
-                  <Reviews />
-                </PageTransition>
-              }
-            />
+          <Route
+            path="/craftsman"
+            element={
+              <PageTransition>
+                <Craftsmanship
+                  onOpenBooking={() => onOpenBooking('sig-cut', 'Face-Shape Consultation')}
+                />
+                <TrustStrip />
+                <ConsultationQuiz
+                  onOpenBooking={(note) => onOpenBooking('sig-cut', note)}
+                />
+                <Reviews />
+              </PageTransition>
+            }
+          />
 
-            {/* Route 3: /menu (Service Menu & Session Planner) */}
-            <Route
-              path="/menu"
-              element={
-                <PageTransition>
-                  <ServiceMenu
-                    onSelectServiceModal={(serviceId) => onOpenBooking(serviceId)}
-                  />
-                  <TrustStrip />
-                  <ConsultationQuiz />
-                </PageTransition>
-              }
-            />
+          <Route
+            path="/menu"
+            element={
+              <PageTransition>
+                <ServiceMenu
+                  onSelectServiceModal={(serviceIds) => onOpenBooking(serviceIds)}
+                />
+                <TrustStrip />
+                <ConsultationQuiz
+                  onOpenBooking={(note) => onOpenBooking('sig-cut', note)}
+                />
+              </PageTransition>
+            }
+          />
 
-            {/* Route 4: /salon (Salon Lookbook, Hygiene & Location Hub) */}
-            <Route
-              path="/salon"
-              element={
-                <PageTransition>
-                  <Lookbook onSelectStyle={onSelectLookbookStyle} />
-                  <Reviews />
-                  <LocationHub onOpenWhatsApp={onOpenWhatsAppDirect} />
-                </PageTransition>
-              }
-            />
+          <Route
+            path="/salon"
+            element={
+              <PageTransition>
+                <Lookbook onSelectStyle={onSelectLookbookStyle} />
+                <Reviews />
+                <LocationHub onOpenWhatsApp={onOpenWhatsAppDirect} />
+              </PageTransition>
+            }
+          />
 
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </AnimatePresence>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </main>
 
       <Footer
@@ -132,11 +126,17 @@ function AppRoutes({
 
 export default function App() {
   const [isBookingOpen, setIsBookingOpen] = useState(false);
-  const [preSelectedServiceId, setPreSelectedServiceId] = useState<string | undefined>(undefined);
+  const [preSelectedServices, setPreSelectedServices] = useState<string[] | undefined>(undefined);
   const [bookingNote, setBookingNote] = useState<string>('');
 
-  const handleOpenBooking = (serviceId?: string, note?: string) => {
-    setPreSelectedServiceId(serviceId);
+  const handleOpenBooking = (serviceIds?: string | string[], note?: string) => {
+    if (Array.isArray(serviceIds)) {
+      setPreSelectedServices(serviceIds);
+    } else if (serviceIds) {
+      setPreSelectedServices([serviceIds]);
+    } else {
+      setPreSelectedServices(undefined);
+    }
     setBookingNote(note || '');
     setIsBookingOpen(true);
   };
@@ -163,7 +163,7 @@ export default function App() {
         <BookingModal
           isOpen={isBookingOpen}
           onClose={() => setIsBookingOpen(false)}
-          preSelectedServiceId={preSelectedServiceId}
+          preSelectedServiceIds={preSelectedServices}
           initialNote={bookingNote}
         />
       </BrowserRouter>

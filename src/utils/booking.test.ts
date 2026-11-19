@@ -10,10 +10,24 @@ import {
   buildHinglishWhatsAppMessage,
   createWhatsAppUrl,
   getSalonStatusIST,
+  getDefaultBookingDateIST,
 } from './booking';
 import { ServiceItem } from '../types';
 import { VIDEOS, MACRO_VIDEOS, HERO_CAROUSEL_SLIDES } from '../config/videos';
 import { LOOKBOOK_ITEMS, SALON_INFO, SERVICES, REVIEWS, TRUST_SIGNALS, QUIZ_QUESTIONS } from '../data/salonData';
+
+function getNextWeekdayStr(targetDay: number): string {
+  const d = new Date();
+  d.setHours(12, 0, 0, 0);
+  d.setDate(d.getDate() + 1);
+  while (d.getDay() !== targetDay) {
+    d.setDate(d.getDate() + 1);
+  }
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
 
 const mockServices: ServiceItem[] = [
   {
@@ -43,6 +57,14 @@ test('isTuesday correctly identifies Tuesdays and other days', () => {
   assert.equal(isTuesday('2026-11-11'), false);
   assert.equal(isTuesday('2026-11-09'), false);
   assert.equal(isTuesday(''), false);
+});
+
+test('getDefaultBookingDateIST skips Tuesday and returns Wednesday in IST', () => {
+  const tuesdayUTC = new Date('2026-11-10T06:30:00.000Z');
+  assert.equal(getDefaultBookingDateIST(tuesdayUTC), '2026-11-11');
+
+  const wednesdayUTC = new Date('2026-11-11T06:30:00.000Z');
+  assert.equal(getDefaultBookingDateIST(wednesdayUTC), '2026-11-11');
 });
 
 test('getSalonStatusIST evaluates Tuesday, open hours, and closed hours in Asia/Kolkata', () => {
@@ -106,11 +128,14 @@ test('validateBookingForm detects missing or invalid fields and Tuesday closure'
   });
   assert.equal(emptyRes.isValid, false);
 
+  const nextTuesday = getNextWeekdayStr(2);
+  const nextWednesday = getNextWeekdayStr(3);
+
   const tuesdayRes = validateBookingForm({
     fullName: 'Rohit Sharma',
     phone: '9575830421',
     selectedServices: ['sig-cut'],
-    date: '2026-11-10',
+    date: nextTuesday,
     timeSlot: '11:00 AM',
     notes: 'Low taper fade',
   });
@@ -121,7 +146,7 @@ test('validateBookingForm detects missing or invalid fields and Tuesday closure'
     fullName: 'Rohit Sharma',
     phone: '9575830421',
     selectedServices: ['sig-cut'],
-    date: '2026-11-11',
+    date: nextWednesday,
     timeSlot: '11:00 AM',
     notes: 'Low taper fade',
   });

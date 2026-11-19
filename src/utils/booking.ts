@@ -29,6 +29,28 @@ export function isPastDate(dateStr: string): boolean {
 }
 
 /**
+ * Returns YYYY-MM-DD in Asia/Kolkata (IST), advancing to Wednesday if today is Tuesday (weekly off).
+ */
+export function getDefaultBookingDateIST(now: Date = new Date()): string {
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  const todayIST = formatter.format(now);
+  if (!isTuesday(todayIST)) {
+    return todayIST;
+  }
+  const [year, month, day] = todayIST.split('-').map(Number);
+  const nextDay = new Date(year, month - 1, day + 1);
+  const y = nextDay.getFullYear();
+  const m = String(nextDay.getMonth() + 1).padStart(2, '0');
+  const d = String(nextDay.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+/**
  * Generates salon operational time slots from 8:30 AM to 9:00 PM in 30-min increments.
  */
 export function generateTimeSlots(): string[] {

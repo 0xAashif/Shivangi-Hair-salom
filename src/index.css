@@ -29,6 +29,7 @@
     color: inherit;
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
   }
 
   #root {
@@ -45,9 +46,8 @@
   font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
-/* Custom Bronze/Gold Gradient text */
 .gold-gradient-text {
-  background: linear-gradient(135deg, #9A7848 0%, #C5A059 50%, #7A5C32 100%);
+  background: linear-gradient(135deg, #9A7848 0%, #C5A059 55%, #7A5C32 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -58,7 +58,6 @@
   -webkit-text-fill-color: transparent;
 }
 
-/* Hide scrollbars on horizontal pill strips while keeping scroll functionality */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
@@ -67,33 +66,12 @@
   scrollbar-width: none;
 }
 
-/* Layered 3D Depth (translateZ(20px)) on Hover */
-.depth-layer-z {
-  transform: translateZ(0px);
-  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: transform;
-}
-
-.group\/tilt:hover .depth-layer-z,
-.group:hover .depth-layer-z {
-  transform: translateZ(20px);
-}
-
-/* Global Strict CTA styles - BroCodes Circular Tech Aesthetic */
 .btn-whatsapp {
   background-color: #25D366;
   color: #FFFFFF;
 }
 .btn-whatsapp:hover {
   background-color: #20BA59;
-}
-
-.btn-facebook {
-  background-color: #1877F2;
-  color: #FFFFFF;
-}
-.btn-facebook:hover {
-  background-color: #1565CC;
 }
 
 .btn-call {
@@ -112,7 +90,6 @@
   background-color: #E2DDD2;
 }
 
-/* Perfect Circular Buttons - 44px refined scale, icon-only, zero text inside */
 .cta-circle {
   display: inline-flex;
   align-items: center;
@@ -122,12 +99,23 @@
   height: 44px;
   aspect-ratio: 1 / 1;
   flex-shrink: 0;
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, opacity 0.2s ease;
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.18s ease;
   user-select: none;
 }
 .cta-circle:hover {
-  transform: scale(1.06);
+  transform: scale(1.05);
 }
 .cta-circle:active {
-  transform: scale(0.95);
+  transform: scale(0.96);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

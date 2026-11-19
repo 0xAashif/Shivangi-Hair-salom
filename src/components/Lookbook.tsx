@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Eye, ArrowRight, X } from 'lucide-react';
+import { Expand, ArrowRight, Camera } from 'lucide-react';
 import { FacebookIcon, InstagramIcon } from './BrandIcons';
 import { LOOKBOOK_ITEMS, SALON_INFO } from '../data/salonData';
-import TiltCard from './TiltCard';
+import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 
 interface LookbookProps {
   onSelectStyle: (styleName: string) => void;
@@ -10,210 +11,180 @@ interface LookbookProps {
 
 export default function Lookbook({ onSelectStyle }: LookbookProps) {
   const [activeCategory, setActiveCategory] = useState<string>('Skin Fade');
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [previewItem, setPreviewItem] = useState<{ image: string; title: string; desc: string } | null>(null);
 
   const categories = ['Skin Fade', 'Beard Detailing', 'Hot Towel Shave', 'Salon', 'All'];
 
-  const filteredItems = activeCategory === 'All'
-    ? LOOKBOOK_ITEMS
-    : LOOKBOOK_ITEMS.filter(item => item.category === activeCategory);
+  const filteredItems =
+    activeCategory === 'All'
+      ? LOOKBOOK_ITEMS
+      : LOOKBOOK_ITEMS.filter((item) => item.category === activeCategory);
 
   return (
     <section
       id="gallery"
-      className="relative py-16 sm:py-24 bg-[#070709] border-b border-white/10 scroll-mt-20 overflow-hidden"
+      className="relative py-20 sm:py-28 bg-[#070709] text-[#F4F1EA] border-b border-white/10 scroll-mt-20 overflow-hidden"
     >
-      {/* Salon Original Interior Photo Background with Clean Dark Editorial Overlay */}
+      {/* Warm Illuminated Salon Interior Backdrop */}
       <div className="absolute inset-0 pointer-events-none select-none overflow-hidden" aria-hidden="true">
         <img
           src="/interior_luxury.jpg"
           alt=""
           loading="lazy"
           decoding="async"
-          className="w-full h-full object-cover object-center filter brightness-[0.22] contrast-125"
+          className="w-full h-full object-cover object-center brightness-[0.34] contrast-115"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#070709]/80 via-[#070709]/55 to-[#070709]/85" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#070709]/82 via-[#070709]/58 to-[#070709]/88" />
+        <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-[780px] h-[340px] bg-[radial-gradient(circle,rgba(197,160,89,0.14)_0%,transparent_70%)]" />
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 sm:mb-12 gap-6">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-8">
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between mb-12 gap-6">
           <div className="space-y-3">
             <div className="flex items-center gap-3">
               <span className="w-8 h-[1px] bg-[#C5A059]" />
-              <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-[#C5A059]">
-                Real Salon Work & Gallery
+              <Camera className="w-3.5 h-3.5 text-[#C5A059] shrink-0" />
+              <span className="text-[11px] font-bold uppercase tracking-[0.26em] text-[#C5A059]">
+                Real Salon Work &amp; Gallery
               </span>
             </div>
-            <h2 className="font-display text-3xl sm:text-5xl font-bold text-[#F4F1EA] tracking-tight">
-              Precision Cuts & Razor Detailing
+            <h2 className="font-display text-3xl sm:text-5xl font-bold text-[#F4F1EA] tracking-tight text-balance">
+              Precision Cuts &amp; Razor Detailing
             </h2>
-            <p className="text-xs sm:text-sm text-[#C2BCB0] max-w-xl">
-              Explore our Kids School Fades, College Teen Textured Crops, Young Man Skin Fades & Beard Line-Ups, and Senior Classic Scissor Cuts in Bhopal.
+            <p className="text-xs sm:text-sm text-[#D6D1C7] max-w-xl leading-relaxed">
+              Explore our Kids School Fades, College Teen Textured Crops, Young Man Skin Fades &amp; Beard Line-Ups, and Senior Classic Scissor Cuts in Bhopal.
             </p>
           </div>
 
-          {/* Filter Pills - Horizontally scrollable on mobile */}
-          <div className="flex items-center gap-1.5 p-1.5 rounded-xl bg-[#EBE6DC] dark:bg-[#121214] border border-stone-900/10 dark:border-white/10 overflow-x-auto no-scrollbar max-w-full shrink-0">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => setActiveCategory(cat)}
-                className={`min-h-[44px] px-4 py-2 text-xs font-bold rounded-lg transition-transform duration-200 cursor-pointer whitespace-nowrap shrink-0 ${
-                  activeCategory === cat
-                    ? 'bg-[#141413] dark:bg-[#F4F1EA] text-[#F4F1EA] dark:text-[#0B0B0C] shadow-sm'
-                    : 'text-[#57534E] dark:text-[#A1A1AA] hover:text-[#141413] dark:hover:text-[#F4F1EA]'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
+          <Tabs value={activeCategory} onValueChange={setActiveCategory} className="shrink-0 w-full sm:w-auto">
+            <TabsList className="bg-[#121214]/95 border-white/15 flex-wrap sm:flex-nowrap w-full sm:w-auto justify-center">
+              {categories.map((cat) => (
+                <TabsTrigger
+                  key={cat}
+                  value={cat}
+                  className="text-[#B8B2A6] hover:text-[#F4F1EA] data-[state=active]:bg-[#F4F1EA] data-[state=active]:text-[#070709]"
+                >
+                  {cat}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
         </div>
 
-        {/* Gallery Grid (16 Items total: 4 per category) */}
+        {/* Clean Gallery Grid (Zero pill badges on photos) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {filteredItems.map((item) => (
-            <TiltCard
+            <article
               key={item.id}
-              className="group rounded-2xl overflow-hidden bg-[#EBE6DC] dark:bg-[#121214] flex flex-col justify-between shadow-sm hover:shadow-xl"
+              className="group rounded-2xl overflow-hidden bg-[#121214] border border-white/10 flex flex-col justify-between transition-colors hover:border-[#C5A059]/45"
             >
-              {/* Image Frame with overflow-hidden for watermark cropping */}
               <div className="relative aspect-[4/3] sm:aspect-square overflow-hidden bg-[#0B0B0C]">
                 <img
                   src={item.image}
                   alt={item.title}
                   loading="lazy"
                   decoding="async"
-                  className={`w-full h-full ${item.imageClassName || 'object-cover object-center'} group-hover:scale-[1.15] transition-transform duration-500`}
+                  className={`w-full h-full ${item.imageClassName || 'object-cover object-center'} group-hover:scale-[1.03] transition-transform duration-300`}
                   referrerPolicy="no-referrer"
                 />
-                
-                <div className="absolute inset-0 bg-gradient-to-t from-[#070709]/85 via-[#070709]/20 to-transparent opacity-75 group-hover:opacity-90 transition-opacity duration-300" />
-                
-                {/* Category tag */}
-                <div className="depth-layer-z absolute top-3 left-3 text-[11px] font-bold text-[#F4F1EA] bg-[#0B0B0C]/80 backdrop-blur-md px-2.5 py-1 rounded-md border border-white/15">
-                  {item.category}
-                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#070709]/70 via-transparent to-transparent" />
 
-                {/* Quick preview */}
                 <button
                   type="button"
-                  onClick={() => setPreviewImage(item.image)}
-                  className="depth-layer-z absolute top-3 right-3 w-9 h-9 rounded-lg bg-[#0B0B0C]/80 backdrop-blur-md text-white hover:bg-black transition-opacity duration-300 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer"
-                  aria-label={`Preview ${item.title}`}
+                  onClick={() => setPreviewItem({ image: item.image, title: item.title, desc: item.desc })}
+                  className="absolute bottom-3 right-3 w-10 h-10 rounded-full bg-black/75 border border-white/20 text-white hover:bg-black flex items-center justify-center cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A059]"
+                  aria-label={`Inspect photo of ${item.title}`}
+                  title="Full View"
                 >
-                  <Eye className="w-4 h-4" />
+                  <Expand className="w-4 h-4" />
                 </button>
               </div>
 
-              {/* Text Info */}
               <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-                <div>
-                  <h3 className="depth-layer-z font-display text-lg font-bold text-[#141413] dark:text-[#F4F1EA]">
+                <div className="space-y-1.5">
+                  <p className="text-[11px] font-medium text-[#C5A059]">
+                    {item.category} · {item.locationTag}
+                  </p>
+                  <h3 className="font-display text-lg font-bold text-[#F4F1EA]">
                     {item.title}
                   </h3>
-                  <p className="mt-1.5 text-xs text-[#57534E] dark:text-[#A1A1AA] leading-relaxed">
+                  <p className="text-xs text-[#B8B2A6] leading-relaxed">
                     {item.desc}
                   </p>
                 </div>
 
-                <div className="pt-3 border-t border-stone-900/10 dark:border-white/10 flex items-center justify-between">
-                  <span className="text-[11px] font-medium text-[#57534E] dark:text-[#A1A1AA]">Bhopal Salon</span>
+                <div className="pt-3 border-t border-white/10">
                   <button
                     type="button"
                     onClick={() => onSelectStyle(item.title)}
-                    className="depth-layer-z flex items-center gap-1 text-xs font-bold text-[#9A7848] dark:text-[#C5A059] hover:underline cursor-pointer"
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#C5A059] hover:text-[#E2C27D] cursor-pointer transition-colors"
                   >
                     <span>Request This Cut</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
-            </TiltCard>
+            </article>
           ))}
         </div>
 
-        {/* Social Spotlight: Official Facebook & Instagram 44px Circular Buttons */}
-        <div className="mt-14 p-7 sm:p-10 rounded-2xl bg-[#EBE6DC] dark:bg-[#121214] border border-stone-900/10 dark:border-white/10 max-w-xl mx-auto flex flex-col items-center text-center space-y-4 shadow-sm">
-          <div className="space-y-1">
-            <h3 className="font-display text-xl sm:text-2xl font-bold text-[#141413] dark:text-[#F4F1EA]">
-              Salon Photos & Daily Haircut Reels
+        {/* Social Spotlight */}
+        <div className="mt-14 pt-10 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div className="space-y-1 text-center sm:text-left">
+            <h3 className="font-display text-xl font-bold text-[#F4F1EA]">
+              Daily Haircut Reels &amp; Customer Makeovers
             </h3>
-            <p className="text-xs sm:text-sm text-[#57534E] dark:text-[#A1A1AA] max-w-md">
-              Follow our daily haircut reels, sharp beard line-ups, and real customer makeovers in Bhopal.
+            <p className="text-xs sm:text-sm text-[#B8B2A6]">
+              Follow @shivangihairsalon.in for fresh Bhopal fades and grooming transformations.
             </p>
           </div>
 
-          <div className="pt-2 flex items-center justify-center gap-6">
-            
-            {/* Facebook 44px CTA */}
-            <div className="flex flex-col items-center gap-2">
-              <a
-                href={SALON_INFO.facebookUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="cta-circle w-11 h-11 bg-[#1877F2] hover:bg-[#166fe5] text-white shadow-md flex items-center justify-center cursor-pointer focus:outline-none focus-visible:ring-4 focus-visible:ring-[#1877F2]/40"
-                aria-label="Follow Shivangi Hair Salon on Facebook"
-                title="Follow on Facebook"
-              >
-                <FacebookIcon className="w-5 h-5 text-white shrink-0" />
-              </a>
-              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#1877F2] dark:text-blue-400">
-                Facebook
-              </span>
-            </div>
-
-            {/* Instagram 44px CTA */}
-            <div className="flex flex-col items-center gap-2">
-              <a
-                href={SALON_INFO.instagramUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="cta-circle w-11 h-11 bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] hover:opacity-95 text-white shadow-md flex items-center justify-center cursor-pointer focus:outline-none focus-visible:ring-4 focus-visible:ring-rose-500/40"
-                aria-label="Follow Shivangi Hair Salon on Instagram"
-                title="Follow on Instagram @shivangihairsalon.in"
-              >
-                <InstagramIcon className="w-5 h-5 text-white shrink-0" />
-              </a>
-              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#dc2743] dark:text-rose-400">
-                Instagram
-              </span>
-            </div>
-
+          <div className="flex items-center gap-4 shrink-0">
+            <a
+              href={SALON_INFO.facebookUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="cta-circle bg-[#1877F2] hover:bg-[#166fe5] text-white"
+              aria-label="Follow Shivangi Hair Salon on Facebook"
+              title="Facebook"
+            >
+              <FacebookIcon className="w-5 h-5 text-white" />
+            </a>
+            <a
+              href={SALON_INFO.instagramUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="cta-circle bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] hover:opacity-95 text-white"
+              aria-label="Follow Shivangi Hair Salon on Instagram"
+              title="Instagram"
+            >
+              <InstagramIcon className="w-5 h-5 text-white" />
+            </a>
           </div>
         </div>
-
       </div>
 
-      {/* Lightbox Modal */}
-      {previewImage && (
-        <div
-          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4"
-          onClick={() => setPreviewImage(null)}
-          role="dialog"
-          aria-label="Image preview"
-        >
-          <div className="relative max-w-4xl max-h-[90vh] rounded-2xl overflow-hidden border border-white/15 shadow-2xl">
-            <img
-              src={previewImage}
-              alt="Preview"
-              className="w-full h-auto max-h-[85vh] object-contain"
-              referrerPolicy="no-referrer"
-            />
-            <button
-              type="button"
-              onClick={() => setPreviewImage(null)}
-              className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-black/80 text-white text-xs font-semibold hover:bg-black transition-colors cursor-pointer"
-            >
-              <X className="w-3.5 h-3.5" />
-              <span>Close</span>
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Accessible Radix Dialog Lightbox */}
+      <Dialog open={Boolean(previewItem)} onOpenChange={(open) => !open && setPreviewItem(null)}>
+        <DialogContent className="max-w-3xl bg-[#0B0B0C] text-[#F4F1EA] border-white/15 p-4 sm:p-6">
+          {previewItem && (
+            <div className="space-y-4">
+              <DialogHeader>
+                <DialogTitle className="text-xl text-[#F4F1EA]">{previewItem.title}</DialogTitle>
+                <DialogDescription className="text-[#B8B2A6]">{previewItem.desc}</DialogDescription>
+              </DialogHeader>
+              <div className="rounded-xl overflow-hidden bg-black border border-white/10">
+                <img
+                  src={previewItem.image}
+                  alt={previewItem.title}
+                  className="w-full h-auto max-h-[70vh] object-contain mx-auto"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Calendar, Clock, Scissors, Copy, Check, AlertCircle, Sparkles } from 'lucide-react';
+import { Calendar, Clock, Scissors, Copy, Check, AlertCircle } from 'lucide-react';
 import { WhatsAppIcon } from './BrandIcons';
 import { SERVICES, SALON_INFO } from '../data/salonData';
 import { BookingFormData } from '../types';
@@ -11,28 +11,38 @@ import {
   createWhatsAppUrl,
   openExternalUrl,
   isTuesday,
+  getDefaultBookingDateIST,
 } from '../utils/booking';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from './ui/dialog';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
 
 interface BookingModalProps {
   isOpen: boolean;
   onClose: () => void;
-  preSelectedServiceId?: string;
+  preSelectedServiceIds?: string[];
   initialNote?: string;
 }
 
 export default function BookingModal({
   isOpen,
   onClose,
-  preSelectedServiceId,
+  preSelectedServiceIds,
   initialNote = '',
 }: BookingModalProps) {
-  const todayStr = new Date().toISOString().split('T')[0];
+  const defaultDateStr = getDefaultBookingDateIST();
 
   const [formData, setFormData] = useState<BookingFormData>({
     fullName: '',
     phone: '',
-    selectedServices: preSelectedServiceId ? [preSelectedServiceId] : ['sig-cut'],
-    date: todayStr,
+    selectedServices: preSelectedServiceIds && preSelectedServiceIds.length > 0 ? preSelectedServiceIds : ['sig-cut'],
+    date: defaultDateStr,
     timeSlot: '11:00 AM',
     notes: initialNote,
   });
@@ -42,62 +52,46 @@ export default function BookingModal({
   const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
-    if (preSelectedServiceId) {
-      setFormData(prev => ({
-        ...prev,
-        selectedServices: prev.selectedServices.includes(preSelectedServiceId)
+    if (!isOpen) return;
+    setSubmitted(false);
+    setErrors({});
+    setFormData((prev) => ({
+      ...prev,
+      selectedServices:
+        preSelectedServiceIds && preSelectedServiceIds.length > 0
+          ? preSelectedServiceIds
+          : prev.selectedServices.length > 0
           ? prev.selectedServices
-          : [...prev.selectedServices, preSelectedServiceId],
-      }));
-    }
-  }, [preSelectedServiceId]);
-
-  useEffect(() => {
-    if (initialNote) {
-      setFormData(prev => ({ ...prev, notes: initialNote }));
-    }
-  }, [initialNote]);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
-
-  if (!isOpen) return null;
+          : ['sig-cut'],
+      notes: initialNote || '',
+    }));
+  }, [isOpen, preSelectedServiceIds, initialNote]);
 
   const timeSlots = generateTimeSlots();
-  const { totalDurationMinutes, minPrice } = calculateBookingTotal(
-    formData.selectedServices,
-    SERVICES
-  );
+  const { totalDurationMinutes } = calculateBookingTotal(formData.selectedServices, SERVICES);
 
   const toggleService = (id: string) => {
-    setFormData(prev => {
+    setFormData((prev) => {
       const exists = prev.selectedServices.includes(id);
-      let updated: string[];
-      if (exists) {
-        updated = prev.selectedServices.filter(sId => sId !== id);
-      } else {
-        updated = [...prev.selectedServices, id];
-      }
+      const updated = exists
+        ? prev.selectedServices.filter((sId) => sId !== id)
+        : [...prev.selectedServices, id];
       return { ...prev, selectedServices: updated };
     });
     if (errors.selectedServices) {
-      setErrors(prev => ({ ...prev, selectedServices: '' }));
+      setErrors((prev) => ({ ...prev, selectedServices: '' }));
     }
   };
 
   const handleDateChange = (val: string) => {
-    setFormData(prev => ({ ...prev, date: val }));
+    setFormData((prev) => ({ ...prev, date: val }));
     if (isTuesday(val)) {
-      setErrors(prev => ({ ...prev, date: 'Shivangi Salon is closed on Tuesdays. Please choose another date.' }));
+      setErrors((prev) => ({
+        ...prev,
+        date: 'Shivangi Salon is closed on Tuesdays. Please choose another date.',
+      }));
     } else {
-      setErrors(prev => ({ ...prev, date: '' }));
+      setErrors((prev) => ({ ...prev, date: '' }));
     }
   };
 
@@ -112,7 +106,7 @@ export default function BookingModal({
 
     const message = formatWhatsAppBookingMessage(formData, SERVICES);
     const url = createWhatsAppUrl(SALON_INFO.rawPhone, message);
-    
+
     setSubmitted(true);
     openExternalUrl(url);
   };
@@ -127,46 +121,27 @@ export default function BookingModal({
   const generatedPreview = formatWhatsAppBookingMessage(formData, SERVICES);
 
   return (
-    <div
-      className="fixed inset-0 z-50 overflow-y-auto bg-black/75 backdrop-blur-md flex items-center justify-center p-3 sm:p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="booking-modal-title"
-    >
-      <div 
-        className="relative w-full max-w-2xl rounded-2xl bg-[#F4F1EA] dark:bg-[#121214] border border-stone-900/10 dark:border-white/10 shadow-2xl p-6 sm:p-8 my-8 max-h-[92vh] overflow-y-auto text-[#141413] dark:text-[#F4F1EA]"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Close Button */}
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute top-5 right-5 w-11 h-11 rounded-xl text-[#57534E] dark:text-[#A1A1AA] hover:text-[#141413] dark:hover:text-[#F4F1EA] hover:bg-stone-900/5 dark:hover:bg-white/10 transition-colors flex items-center justify-center cursor-pointer"
-          aria-label="Close booking modal"
-        >
-          <X className="w-5 h-5" />
-        </button>
-
-        {/* Modal Header */}
-        <div className="space-y-1 pb-5 border-b border-stone-900/10 dark:border-white/10 pr-12">
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#9A7848] dark:text-[#C5A059]">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Direct WhatsApp Chair Booking</span>
-          </div>
-          <h2 id="booking-modal-title" className="font-display text-2xl sm:text-3xl font-bold text-[#141413] dark:text-[#F4F1EA]">
-            Book Your Chair at Shivangi Salon
-          </h2>
-          <p className="text-xs sm:text-sm text-[#57534E] dark:text-[#A1A1AA]">
-            Select your services, date & time. Your booking message goes straight to our salon WhatsApp at <span className="font-mono font-bold text-[#141413] dark:text-[#F4F1EA]">+91 9575830421</span>.
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent aria-labelledby="booking-modal-title">
+        <DialogHeader className="pb-5 border-b border-stone-900/10 dark:border-white/10">
+          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#9A7848] dark:text-[#C5A059]">
+            Direct WhatsApp Chair Booking
           </p>
-        </div>
+          <DialogTitle id="booking-modal-title">
+            Book Your Chair at Shivangi Salon
+          </DialogTitle>
+          <DialogDescription>
+            Select your services, date &amp; time. Your booking message goes straight to our salon WhatsApp at{' '}
+            <span className="font-mono font-bold text-[#141413] dark:text-[#F4F1EA]">+91 9575830421</span>.
+          </DialogDescription>
+        </DialogHeader>
 
         {submitted ? (
           <div className="py-10 text-center space-y-4">
-            <div className="w-16 h-16 mx-auto rounded-full bg-[#C5A059]/20 border border-[#C5A059]/40 flex items-center justify-center text-[#9A7848] dark:text-[#C5A059] shadow-lg">
+            <div className="w-16 h-16 mx-auto rounded-full bg-[#C5A059]/20 border border-[#C5A059]/40 flex items-center justify-center text-[#9A7848] dark:text-[#C5A059]">
               <Check className="w-8 h-8 stroke-[2.5]" />
             </div>
-            <h3 className="font-display text-2xl font-bold text-[#141413] dark:text-[#F4F1EA]">
+            <h3 className="font-display text-2xl font-bold">
               WhatsApp Request Ready
             </h3>
             <p className="text-sm text-[#57534E] dark:text-[#A1A1AA] max-w-md mx-auto leading-relaxed">
@@ -174,45 +149,36 @@ export default function BookingModal({
             </p>
 
             <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
-              <button
-                type="button"
-                onClick={() => setSubmitted(false)}
-                className="min-h-[44px] px-5 py-2.5 rounded-xl text-xs font-semibold border border-stone-900/10 dark:border-white/10 bg-[#EBE6DC] dark:bg-[#18181B] text-[#141413] dark:text-[#F4F1EA] cursor-pointer"
-              >
+              <Button type="button" variant="outline" onClick={() => setSubmitted(false)}>
                 Edit Booking
-              </button>
-              <button
-                type="button"
-                onClick={onClose}
-                className="min-h-[44px] px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider btn-call cursor-pointer"
-              >
+              </Button>
+              <Button type="button" variant="default" onClick={onClose}>
                 Close Window
-              </button>
+              </Button>
             </div>
           </div>
         ) : (
-          <form onSubmit={handleBookViaWhatsApp} className="mt-6 space-y-6">
-            
-            {/* 1. Service Selection (Non-CTA selection highlights use Champagne Brass instead of green) */}
+          <form onSubmit={handleBookViaWhatsApp} className="mt-5 space-y-5" noValidate>
+            {/* 1. Service Selection */}
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-bold uppercase tracking-wider text-[#141413] dark:text-[#F4F1EA] flex items-center gap-1.5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
                   <Scissors className="w-3.5 h-3.5 text-[#9A7848] dark:text-[#C5A059]" />
                   <span>1. Select Grooming Services</span>
-                </label>
-                <span className="text-xs text-[#57534E] dark:text-[#A1A1AA]">
-                  Duration: <strong className="text-[#141413] dark:text-[#F4F1EA] font-mono">~{totalDurationMinutes} mins</strong> · <strong className="text-[#9A7848] dark:text-[#C5A059] font-mono">Starts from ₹100 · Negotiable</strong>
+                </span>
+                <span className="text-xs text-[#57534E] dark:text-[#A1A1AA] font-mono tabular-nums">
+                  ~{totalDurationMinutes} min · Starts from ₹100
                 </span>
               </div>
 
               {errors.selectedServices && (
                 <p className="text-xs text-rose-600 dark:text-rose-400 flex items-center gap-1">
-                  <AlertCircle className="w-3 h-3" />
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                   <span>{errors.selectedServices}</span>
                 </p>
               )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-52 overflow-y-auto pr-1">
                 {SERVICES.map((s) => {
                   const isChecked = formData.selectedServices.includes(s.id);
                   return (
@@ -220,51 +186,50 @@ export default function BookingModal({
                       type="button"
                       key={s.id}
                       onClick={() => toggleService(s.id)}
-                      aria-label={`${s.name}, ${s.durationMinutes} minutes`}
                       aria-pressed={isChecked}
-                      className={`p-3 rounded-xl border text-left flex items-start justify-between gap-2 transition-all cursor-pointer ${
+                      className={`p-3 rounded-xl border text-left flex items-start justify-between gap-2 transition-colors cursor-pointer ${
                         isChecked
-                          ? 'bg-[#EBE6DC] dark:bg-[#18181B] border-[#9A7848] dark:border-[#C5A059] text-[#141413] dark:text-[#F4F1EA] shadow-sm'
-                          : 'bg-[#EBE6DC]/50 dark:bg-[#0B0B0C] border-stone-900/10 dark:border-white/10 text-[#57534E] dark:text-[#A1A1AA] hover:border-[#9A7848]/50 dark:hover:border-[#C5A059]/50'
+                          ? 'bg-[#EBE6DC] dark:bg-[#18181B] border-[#9A7848] dark:border-[#C5A059] text-[#141413] dark:text-[#F4F1EA]'
+                          : 'bg-[#EBE6DC]/45 dark:bg-[#0B0B0C] border-stone-900/10 dark:border-white/10 text-[#57534E] dark:text-[#A1A1AA] hover:border-[#9A7848]/50 dark:hover:border-[#C5A059]/50'
                       }`}
                     >
-                      <div className="space-y-1">
-                        <p className={`text-xs font-bold ${isChecked ? 'text-[#141413] dark:text-[#F4F1EA]' : 'text-[#57534E] dark:text-[#A1A1AA]'}`}>
+                      <div className="space-y-0.5">
+                        <p className={`text-xs font-bold ${isChecked ? 'text-[#141413] dark:text-[#F4F1EA]' : ''}`}>
                           {s.name}
                         </p>
-                        <p className="text-[11px] text-[#57534E] dark:text-[#A1A1AA] font-mono">
-                          {s.durationMinutes} mins · <strong className="text-[#9A7848] dark:text-[#C5A059]">Starts from ₹100 · Negotiable</strong>
+                        <p className="text-[11px] font-mono tabular-nums text-[#57534E] dark:text-[#A1A1AA]">
+                          {s.durationMinutes} min · Starts from ₹100
                         </p>
                       </div>
-                      <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 mt-0.5 ${
-                        isChecked ? 'bg-[#9A7848] dark:bg-[#C5A059] border-[#9A7848] dark:border-[#C5A059] text-white dark:text-black' : 'border-stone-400 dark:border-zinc-600'
-                      }`}>
+                      <span
+                        className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 mt-0.5 ${
+                          isChecked
+                            ? 'bg-[#9A7848] dark:bg-[#C5A059] border-[#9A7848] dark:border-[#C5A059] text-white dark:text-black'
+                            : 'border-stone-400 dark:border-zinc-600'
+                        }`}
+                      >
                         {isChecked && <Check className="w-3 h-3 stroke-[3]" />}
-                      </div>
+                      </span>
                     </button>
                   );
                 })}
               </div>
             </div>
 
-            {/* 2. Date & Time Row */}
+            {/* 2. Date & Time */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              
-              {/* Date */}
               <div className="space-y-1.5">
-                <label htmlFor="booking-date" className="text-xs font-bold uppercase tracking-wider text-[#141413] dark:text-[#F4F1EA] flex items-center gap-1.5">
+                <label htmlFor="booking-date" className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
                   <Calendar className="w-3.5 h-3.5 text-[#9A7848] dark:text-[#C5A059]" />
                   <span>2. Preferred Date</span>
                 </label>
-                <input
+                <Input
                   id="booking-date"
                   type="date"
-                  min={todayStr}
+                  min={defaultDateStr}
                   value={formData.date}
+                  hasError={Boolean(errors.date)}
                   onChange={(e) => handleDateChange(e.target.value)}
-                  className={`w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-white dark:bg-[#0B0B0C] border text-xs sm:text-sm text-[#141413] dark:text-[#F4F1EA] focus:outline-none focus:border-[#9A7848] dark:focus:border-[#C5A059] ${
-                    errors.date ? 'border-rose-500' : 'border-stone-900/15 dark:border-white/15'
-                  }`}
                   required
                 />
                 {errors.date ? (
@@ -274,14 +239,13 @@ export default function BookingModal({
                   </p>
                 ) : (
                   <p className="text-[11px] text-[#57534E] dark:text-[#A1A1AA]">
-                    Closed every Tuesday for salon deep cleaning.
+                    Closed every Tuesday for weekly rest.
                   </p>
                 )}
               </div>
 
-              {/* Time slot */}
               <div className="space-y-1.5">
-                <label htmlFor="booking-time" className="text-xs font-bold uppercase tracking-wider text-[#141413] dark:text-[#F4F1EA] flex items-center gap-1.5">
+                <label htmlFor="booking-time" className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5 text-[#9A7848] dark:text-[#C5A059]" />
                   <span>3. Preferred Time Slot</span>
                 </label>
@@ -289,16 +253,16 @@ export default function BookingModal({
                   id="booking-time"
                   value={formData.timeSlot}
                   onChange={(e) => {
-                    setFormData(prev => ({ ...prev, timeSlot: e.target.value }));
-                    if (errors.timeSlot) setErrors(prev => ({ ...prev, timeSlot: '' }));
+                    setFormData((prev) => ({ ...prev, timeSlot: e.target.value }));
+                    if (errors.timeSlot) setErrors((prev) => ({ ...prev, timeSlot: '' }));
                   }}
-                  className={`w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-white dark:bg-[#0B0B0C] border text-xs sm:text-sm text-[#141413] dark:text-[#F4F1EA] focus:outline-none focus:border-[#9A7848] dark:focus:border-[#C5A059] cursor-pointer ${
+                  className={`flex min-h-[44px] w-full rounded-xl border bg-white dark:bg-[#0B0B0C] px-3.5 py-2.5 text-sm text-[#141413] dark:text-[#F4F1EA] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A059] cursor-pointer ${
                     errors.timeSlot ? 'border-rose-500' : 'border-stone-900/15 dark:border-white/15'
                   }`}
                   required
                 >
                   {timeSlots.map((slot) => (
-                    <option key={slot} value={slot} className="bg-white dark:bg-[#121214] text-[#141413] dark:text-[#F4F1EA]">
+                    <option key={slot} value={slot} className="bg-white dark:bg-[#121214]">
                       {slot}
                     </option>
                   ))}
@@ -307,28 +271,24 @@ export default function BookingModal({
                   Salon Hours: 8:30 AM – 9:30 PM
                 </p>
               </div>
-
             </div>
 
             {/* 3. Name & Phone */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              
               <div className="space-y-1.5">
-                <label htmlFor="client-name" className="text-xs font-bold uppercase tracking-wider text-[#141413] dark:text-[#F4F1EA]">
+                <label htmlFor="client-name" className="text-xs font-bold uppercase tracking-wider block">
                   Your Full Name
                 </label>
-                <input
+                <Input
                   id="client-name"
                   type="text"
                   placeholder="e.g. Rohit Sharma"
                   value={formData.fullName}
+                  hasError={Boolean(errors.fullName)}
                   onChange={(e) => {
-                    setFormData(prev => ({ ...prev, fullName: e.target.value }));
-                    if (errors.fullName) setErrors(prev => ({ ...prev, fullName: '' }));
+                    setFormData((prev) => ({ ...prev, fullName: e.target.value }));
+                    if (errors.fullName) setErrors((prev) => ({ ...prev, fullName: '' }));
                   }}
-                  className={`w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-white dark:bg-[#0B0B0C] border text-xs sm:text-sm text-[#141413] dark:text-[#F4F1EA] focus:outline-none focus:border-[#9A7848] dark:focus:border-[#C5A059] ${
-                    errors.fullName ? 'border-rose-500' : 'border-stone-900/15 dark:border-white/15'
-                  }`}
                   required
                 />
                 {errors.fullName && (
@@ -337,58 +297,54 @@ export default function BookingModal({
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="client-phone" className="text-xs font-bold uppercase tracking-wider text-[#141413] dark:text-[#F4F1EA]">
+                <label htmlFor="client-phone" className="text-xs font-bold uppercase tracking-wider block">
                   WhatsApp Mobile Number
                 </label>
-                <input
+                <Input
                   id="client-phone"
                   type="tel"
                   placeholder="e.g. 9575830421"
                   value={formData.phone}
+                  hasError={Boolean(errors.phone)}
                   onChange={(e) => {
-                    setFormData(prev => ({ ...prev, phone: e.target.value }));
-                    if (errors.phone) setErrors(prev => ({ ...prev, phone: '' }));
+                    setFormData((prev) => ({ ...prev, phone: e.target.value }));
+                    if (errors.phone) setErrors((prev) => ({ ...prev, phone: '' }));
                   }}
-                  className={`w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-white dark:bg-[#0B0B0C] border text-xs sm:text-sm text-[#141413] dark:text-[#F4F1EA] focus:outline-none focus:border-[#9A7848] dark:focus:border-[#C5A059] ${
-                    errors.phone ? 'border-rose-500' : 'border-stone-900/15 dark:border-white/15'
-                  }`}
                   required
                 />
                 {errors.phone && (
                   <p className="text-[11px] text-rose-600 dark:text-rose-400">{errors.phone}</p>
                 )}
               </div>
-
             </div>
 
             {/* 4. Notes */}
             <div className="space-y-1.5">
-              <label htmlFor="client-notes" className="text-xs font-bold uppercase tracking-wider text-[#141413] dark:text-[#F4F1EA]">
+              <label htmlFor="client-notes" className="text-xs font-bold uppercase tracking-wider block">
                 Style Request / Notes (Optional)
               </label>
-              <input
+              <Input
                 id="client-notes"
                 type="text"
                 placeholder="e.g. Low drop fade, sharp beard line-up, hot towel shave"
                 value={formData.notes}
-                onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                className="w-full min-h-[44px] px-3.5 py-2 rounded-xl bg-white dark:bg-[#0B0B0C] border border-stone-900/15 dark:border-white/15 text-xs sm:text-sm text-[#141413] dark:text-[#F4F1EA] focus:outline-none focus:border-[#9A7848] dark:focus:border-[#C5A059]"
+                onChange={(e) => setFormData((prev) => ({ ...prev, notes: e.target.value }))}
               />
             </div>
 
             {/* 5. Pre-filled WhatsApp Preview */}
             <div className="p-3.5 rounded-xl bg-[#EBE6DC] dark:bg-[#0B0B0C] border border-stone-900/10 dark:border-white/10 space-y-2">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-bold text-[#141413] dark:text-[#F4F1EA] flex items-center gap-1.5">
+                <span className="font-bold flex items-center gap-1.5">
                   <WhatsAppIcon className="w-4 h-4 text-[#25D366]" />
                   <span>WhatsApp Message Preview (+91 9575830421)</span>
                 </span>
                 <button
                   type="button"
                   onClick={handleCopyMessage}
-                  className="flex items-center gap-1 text-[11px] font-semibold text-[#9A7848] dark:text-[#C5A059] hover:underline cursor-pointer"
+                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#9A7848] dark:text-[#C5A059] hover:underline cursor-pointer"
                 >
-                  {copied ? <Check className="w-3 h-3 text-[#9A7848] dark:text-[#C5A059]" /> : <Copy className="w-3 h-3" />}
+                  {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
                   <span>{copied ? 'Copied' : 'Copy Text'}</span>
                 </button>
               </div>
@@ -397,29 +353,19 @@ export default function BookingModal({
               </pre>
             </div>
 
-            {/* Action Buttons: Strict Green WhatsApp CTA Preserved */}
-            <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
-              <button
-                type="submit"
-                className="w-full flex-1 flex items-center justify-center gap-2.5 py-4 px-6 rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider btn-whatsapp shadow-lg hover:scale-[1.01] active:scale-95 transition-all cursor-pointer"
-              >
-                <WhatsAppIcon className="w-5 h-5 text-white" />
-                <span>Confirm & Send on WhatsApp</span>
-              </button>
+            <div className="pt-1 flex flex-col sm:flex-row items-center gap-3">
+              <Button type="submit" variant="whatsapp" size="lg" className="w-full flex-1 uppercase text-xs tracking-wider">
+                <WhatsAppIcon className="w-5 h-5 text-white shrink-0" />
+                <span>Confirm &amp; Send on WhatsApp</span>
+              </Button>
 
-              <button
-                type="button"
-                onClick={onClose}
-                className="w-full sm:w-auto px-5 py-4 rounded-xl text-xs font-semibold text-[#57534E] dark:text-[#A1A1AA] hover:text-[#141413] dark:hover:text-[#F4F1EA] border border-stone-900/10 dark:border-white/10 cursor-pointer"
-              >
+              <Button type="button" variant="outline" size="lg" onClick={onClose} className="w-full sm:w-auto">
                 Cancel
-              </button>
+              </Button>
             </div>
-
           </form>
         )}
-
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

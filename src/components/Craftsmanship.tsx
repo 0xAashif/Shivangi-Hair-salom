@@ -1,16 +1,16 @@
-import { Phone, Scissors, ShieldCheck, Compass } from 'lucide-react';
+import { Award, CalendarCheck, Compass, Phone, Scissors, ShieldCheck } from 'lucide-react';
 import { WhatsAppIcon } from './BrandIcons';
 import { SALON_INFO } from '../data/salonData';
 import { MACRO_VIDEOS } from '../config/videos';
 import { buildHinglishWhatsAppMessage, createWhatsAppUrl, openExternalUrl } from '../utils/booking';
 import MacroVideo from './MacroVideo';
-import TiltCard from './TiltCard';
+import { Button } from './ui/button';
 
 interface CraftsmanshipProps {
-  onOpenBooking?: () => void;
+  onOpenBooking: () => void;
 }
 
-export default function Craftsmanship({}: CraftsmanshipProps) {
+export default function Craftsmanship({ onOpenBooking }: CraftsmanshipProps) {
   const handleWhatsAppClick = () => {
     const msg = buildHinglishWhatsAppMessage('Signature Haircut & Skin Fade');
     const url = createWhatsAppUrl(SALON_INFO.rawPhone, msg);
@@ -22,13 +22,13 @@ export default function Craftsmanship({}: CraftsmanshipProps) {
       index: '01',
       icon: Scissors,
       title: 'Sharp Scissor & Fade Work',
-      desc: 'Clean, balanced haircuts that stay in shape for weeks, not just day one.',
+      desc: 'Clean, balanced haircuts that hold their shape for weeks—not just on day one.',
     },
     {
       index: '02',
       icon: Compass,
       title: 'Cut According to Your Face Shape',
-      desc: 'We check your face cut and hair growth before touching the clipper so the style naturally suits your face shape.',
+      desc: 'We check your face structure and natural hair growth before touching the clipper.',
     },
     {
       index: '03',
@@ -39,176 +39,148 @@ export default function Craftsmanship({}: CraftsmanshipProps) {
   ];
 
   return (
-    <section 
-      id="barber" 
-      className="py-20 sm:py-28 bg-transparent border-b border-stone-900/10 dark:border-white/10 scroll-mt-20 overflow-hidden"
+    <section
+      id="barber"
+      className="py-20 sm:py-28 bg-transparent border-b border-stone-900/10 dark:border-white/10 scroll-mt-20"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        {/* Editorial Subtitle Marker */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-8">
         <div className="flex items-center gap-3 mb-10">
           <span className="w-8 h-[1px] bg-[#9A7848] dark:bg-[#C5A059]" />
-          <span className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#9A7848] dark:text-[#C5A059]">
+          <Scissors className="w-3.5 h-3.5 text-[#9A7848] dark:text-[#C5A059] shrink-0" />
+          <span className="text-[11px] font-bold uppercase tracking-[0.26em] text-[#9A7848] dark:text-[#C5A059]">
             Meet Your Barber · Shivangi Hair Salon
           </span>
         </div>
 
-        {/* Asymmetrical Editorial Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
-          
-          {/* Left Column: Clean Unobstructed Portrait of @barber.jpg + Badges Below Frame (5 cols) */}
-          <div className="lg:col-span-5 space-y-4">
-            <TiltCard className="rounded-2xl overflow-hidden bg-[#EBE6DC] dark:bg-[#121214] border border-stone-900/10 dark:border-white/10 shadow-xl">
-              <div className="relative aspect-[3/4] w-full overflow-hidden">
-                <img
-                  src="/barber.jpg"
-                  alt="Master Barber at Shivangi Hair Salon Bhopal"
-                  loading="lazy"
-                  decoding="async"
-                  className="w-full h-full object-cover object-top"
-                  referrerPolicy="no-referrer"
-                />
-              </div>
-            </TiltCard>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-start">
+          {/* Left Column: Clean Unobstructed Portrait + Unified Editorial Footer */}
+          <div className="lg:col-span-5 rounded-2xl overflow-hidden bg-[#EBE6DC] dark:bg-[#121214] border border-stone-900/10 dark:border-white/10 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+            <div className="relative aspect-[3/4] w-full overflow-hidden">
+              <img
+                src="/barber.jpg"
+                alt="Master Barber at Shivangi Hair Salon Bhopal"
+                loading="lazy"
+                decoding="async"
+                className="w-full h-full object-cover object-top"
+                referrerPolicy="no-referrer"
+              />
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/35 to-transparent"
+              />
+            </div>
 
-            {/* Clean Badges Placed Strictly Below the Portrait Frame (Zero Face Overlap) */}
-            <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-[#EBE6DC] dark:bg-[#121214] border border-stone-900/10 dark:border-white/10">
+            <div className="flex items-center justify-between gap-4 px-5 py-4 border-t border-stone-900/10 dark:border-white/10">
               <div>
-                <span className="text-[10px] uppercase tracking-[0.24em] text-[#9A7848] dark:text-[#C5A059] font-bold block">
-                  SHIVANGI SALON · BHOPAL
-                </span>
-                <p className="font-display text-lg sm:text-xl font-bold tracking-tight text-[#141413] dark:text-[#F4F1EA] mt-0.5">
+                <p className="font-display text-lg font-bold text-[#141413] dark:text-[#F4F1EA]">
                   Master Barber
                 </p>
-                <p className="text-xs text-[#57544E] dark:text-[#A6A095] font-mono">
-                  Bhensakhedi Road
+                <p className="text-xs text-[#57534E] dark:text-[#A1A1AA]">
+                  Bhensakhedi Road · Bhopal
                 </p>
               </div>
 
-              <div className="px-3.5 py-2 rounded-lg border border-stone-900/10 dark:border-white/10 text-right shrink-0">
-                <span className="font-mono text-sm sm:text-base font-bold text-[#141413] dark:text-[#F4F1EA] block">
-                  8+ Years
+              <div className="text-right shrink-0">
+                <span className="inline-flex items-center justify-end gap-1.5 font-mono text-base font-bold text-[#9A7848] dark:text-[#C5A059] tabular-nums">
+                  <Award className="w-4 h-4 shrink-0" />
+                  <span>8+ Years</span>
                 </span>
-                <span className="text-[10px] uppercase tracking-wider text-[#9A7848] dark:text-[#C5A059] block font-semibold">
+                <span className="text-[11px] text-[#57534E] dark:text-[#A1A1AA] block">
                   Salon Experience
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Right Column: Clear Customer-Friendly Copy, 3D Tilt Pillars & Macro Straight Razor Showcase (7 cols) */}
+          {/* Right Column: Editorial Story, Hairline Numbered Craft List, & Blade Video */}
           <div className="lg:col-span-7 space-y-8">
-            
             <div className="space-y-4">
-              <h2 className="font-display text-3xl sm:text-5xl lg:text-6xl font-bold text-[#141413] dark:text-[#F4F1EA] tracking-tight leading-[1.12]">
-                The hands behind the fade. 8+ years of real salon experience.
+              <h2 className="font-display text-3xl sm:text-5xl font-bold text-[#141413] dark:text-[#F4F1EA] tracking-tight leading-[1.12] text-balance">
+                The hands behind the fade. 8+ years of real salon craft.
               </h2>
-              
-              <p className="text-sm sm:text-base text-[#4A4742] dark:text-[#A6A095] leading-relaxed font-normal">
+              <p className="text-sm sm:text-base text-[#4A4742] dark:text-[#A6A095] leading-relaxed max-w-2xl">
                 At Shivangi Hair Salon, we never rush your haircut. Before picking up a clipper, our Master Barber checks your face shape and natural hair growth—giving you a sharp, comfortable look that stays neat and easy to style for weeks.
               </p>
             </div>
 
-            {/* 3 Feature Cards: Monospace 01, 02, 03 + Bare Thin-Stroke Icons + 1px Architectural Hairlines */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+            {/* Clean Hairline List with Lucide Stroke Icons */}
+            <div className="divide-y divide-stone-900/10 dark:divide-white/10 border-y border-stone-900/10 dark:border-white/10">
               {pillars.map((pillar) => {
                 const Icon = pillar.icon;
                 return (
-                  <TiltCard
-                    key={pillar.title}
-                    className="p-5 rounded-xl bg-[#EBE6DC] dark:bg-[#121214] border border-stone-900/10 dark:border-white/10"
+                  <div
+                    key={pillar.index}
+                    className="py-5 grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-4 items-baseline"
                   >
-                    <div className="space-y-3">
-                      <div className="depth-layer-z flex items-center justify-between">
-                        <span className="text-xs font-mono font-bold tracking-widest text-[#9A7848] dark:text-[#C5A059]">
-                          {pillar.index}
-                        </span>
-                        <Icon className="w-4 h-4 text-[#9A7848] dark:text-[#C5A059] stroke-[1.5]" />
-                      </div>
-                      <h3 className="depth-layer-z font-bold text-xs sm:text-sm uppercase tracking-wider text-[#141413] dark:text-[#F4F1EA]">
-                        {pillar.title}
-                      </h3>
-                      <p className="text-xs text-[#57544E] dark:text-[#A6A095] leading-relaxed">
-                        {pillar.desc}
-                      </p>
+                    <div className="sm:col-span-2 flex items-center gap-2 font-mono text-xs font-bold tracking-widest text-[#9A7848] dark:text-[#C5A059] tabular-nums">
+                      <Icon className="w-4 h-4 shrink-0 stroke-[1.75]" />
+                      <span>{pillar.index}.</span>
                     </div>
-                  </TiltCard>
+                    <h3 className="sm:col-span-4 font-bold text-sm text-[#141413] dark:text-[#F4F1EA]">
+                      {pillar.title}
+                    </h3>
+                    <p className="sm:col-span-6 text-xs sm:text-sm text-[#57534E] dark:text-[#A6A095] leading-relaxed">
+                      {pillar.desc}
+                    </p>
+                  </div>
                 );
               })}
             </div>
 
-            {/* Video 3 Showcase Strip: Macro 100% Fresh Sealed Blade on Dark Slate */}
-            <div className="relative rounded-2xl overflow-hidden border border-stone-900/10 dark:border-white/10 bg-[#070709] p-5 sm:p-6 shadow-md">
+            {/* Fresh Blade Macro Video Strip with Luminous Contrast */}
+            <div className="relative rounded-2xl overflow-hidden border border-stone-900/15 dark:border-white/15 bg-[#070709] p-6 shadow-md">
               <MacroVideo
                 asset={MACRO_VIDEOS.trustStrip}
-                className="w-full h-full object-cover object-center opacity-45"
-                overlayClassName="bg-gradient-to-r from-[#070709]/92 via-[#070709]/78 to-[#070709]/90"
+                className="w-full h-full object-cover object-center brightness-[0.88] contrast-[1.08] opacity-65"
+                overlayClassName="bg-gradient-to-r from-[#070709]/88 via-[#070709]/55 to-[#070709]/80"
               />
-              <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="space-y-1">
-                  <span className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#C5A059] block">
-                    100% Fresh Sealed Blade · Zero Reuse
-                  </span>
-                  <h3 className="font-display text-base sm:text-lg font-bold text-[#F4F1EA]">
-                    Sharp Beard Line-Up & UV-Cleaned Tools
-                  </h3>
-                  <p className="text-xs text-[#D6D1C7] max-w-xl">
-                    Every shave and beard line-up uses a brand-new sealed blade unpacked right in front of your chair.
-                  </p>
-                </div>
+              <div className="relative z-10 space-y-1.5">
+                <p className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#C5A059]">
+                  <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+                  <span>100% Fresh Sealed Blade · Zero Reuse</span>
+                </p>
+                <h3 className="font-display text-lg font-bold text-[#F4F1EA]">
+                  Sharp Beard Line-Up &amp; UV-Cleaned Tools
+                </h3>
+                <p className="text-xs sm:text-sm text-[#E2DDD2] max-w-xl">
+                  Every shave and beard line-up uses a brand-new sealed blade unpacked right in front of your chair.
+                </p>
               </div>
             </div>
 
-            {/* Action Buttons: 44px Circular Action Buttons (Kept 100% Intact) */}
-            <div className="pt-2 flex items-center gap-6">
-              
-              {/* WhatsApp Green Circular CTA (44px) */}
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={handleWhatsAppClick}
-                  className="cta-circle w-11 h-11 bg-[#25D366] text-white shadow-md hover:bg-[#20BA59] cursor-pointer focus:outline-none focus-visible:ring-4 focus-visible:ring-[#25D366]/40 flex items-center justify-center shrink-0"
-                  aria-label="Book Chair on WhatsApp (+91 9575830421)"
-                  title="Book on WhatsApp"
-                >
-                  <WhatsAppIcon className="w-5 h-5 text-white shrink-0" />
-                </button>
-                <div className="flex flex-col">
-                  <span className="text-xs font-bold uppercase tracking-wider text-[#141413] dark:text-[#F4F1EA]">
-                    Book Chair
-                  </span>
-                  <span className="text-[10px] text-[#25D366] font-mono font-semibold">
-                    WhatsApp Direct
-                  </span>
-                </div>
-              </div>
+            {/* Primary Slot Booking + Direct WhatsApp + Call */}
+            <div className="pt-2 flex flex-wrap items-center gap-4">
+              <Button
+                type="button"
+                variant="default"
+                onClick={onOpenBooking}
+                className="uppercase text-xs tracking-wider"
+              >
+                <CalendarCheck className="w-4 h-4 shrink-0" />
+                <span>Book Face-Shape Consultation</span>
+              </Button>
 
-              {/* Call Black Circular CTA (44px) */}
-              <div className="flex items-center gap-3">
-                <a
-                  href={`tel:${SALON_INFO.phone}`}
-                  className="cta-circle w-11 h-11 btn-call text-white shadow-md cursor-pointer focus:outline-none flex items-center justify-center shrink-0"
-                  aria-label={`Call salon at ${SALON_INFO.phone}`}
-                  title="Call Salon"
-                >
-                  <Phone className="w-5 h-5 shrink-0" />
-                </a>
-                <div className="flex flex-col">
-                  <span className="text-xs font-bold uppercase tracking-wider text-[#141413] dark:text-[#F4F1EA]">
-                    Direct Call
-                  </span>
-                  <span className="text-[10px] text-[#57544E] dark:text-[#A6A095] font-mono">
-                    {SALON_INFO.phone}
-                  </span>
-                </div>
-              </div>
+              <button
+                type="button"
+                onClick={handleWhatsAppClick}
+                className="cta-circle btn-whatsapp shadow-sm cursor-pointer"
+                aria-label="Message on WhatsApp (+91 9575830421)"
+                title="Direct WhatsApp"
+              >
+                <WhatsAppIcon className="w-5 h-5 text-white shrink-0" />
+              </button>
 
+              <a
+                href={`tel:${SALON_INFO.phone}`}
+                className="cta-circle btn-call shadow-sm"
+                aria-label={`Call salon at ${SALON_INFO.phone}`}
+                title="Call Salon"
+              >
+                <Phone className="w-5 h-5 shrink-0" />
+              </a>
             </div>
-
           </div>
-
         </div>
-
       </div>
     </section>
   );

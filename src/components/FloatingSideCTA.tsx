@@ -8,31 +8,31 @@ interface FloatingSideCTAProps {
 
 export default function FloatingSideCTA({ onOpenWhatsApp }: FloatingSideCTAProps) {
   return (
-    <aside 
-      className="fixed bottom-6 right-5 z-50 flex flex-col items-end gap-3.5 sm:gap-4 pointer-events-none select-none"
-      aria-label="Direct salon contact"
+    <aside
+      className="fixed bottom-4 sm:bottom-5 right-4 z-40 flex items-center gap-2.5 pointer-events-none select-none"
+      aria-label="Quick salon contact"
     >
-      {/* Top: Small Green WhatsApp Circle (44px) */}
+      <a
+        href={`tel:${SALON_INFO.phone}`}
+        className="pointer-events-auto inline-flex items-center justify-center gap-2 h-11 w-11 sm:w-auto sm:px-4 rounded-full bg-[#141413]/95 dark:bg-[#121214]/95 text-[#F4F1EA] border border-[#C5A059]/40 shadow-lg backdrop-blur-md hover:bg-black hover:border-[#C5A059] transition-colors"
+        aria-label={`Call salon directly at ${SALON_INFO.phone}`}
+        title="Call Us Now"
+      >
+        <Phone className="w-4 h-4 text-[#C5A059] shrink-0" />
+        <span className="hidden sm:inline text-[11px] font-bold uppercase tracking-[0.14em] whitespace-nowrap">
+          Call Us Now
+        </span>
+      </a>
+
       <button
         type="button"
         onClick={onOpenWhatsApp}
-        className="pointer-events-auto w-11 h-11 rounded-full bg-[#25D366] hover:bg-[#20BA59] text-white shadow-[0_8px_25px_rgba(37,211,102,0.35)] hover:scale-105 active:scale-95 transition-all flex items-center justify-center cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#25D366]/50"
+        className="pointer-events-auto cta-circle bg-[#25D366] hover:bg-[#20BA59] text-white shadow-lg cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#25D366]/60"
         aria-label="Book on WhatsApp (+91 9575830421)"
         title="Book on WhatsApp"
       >
         <WhatsAppIcon className="w-5 h-5 text-white shrink-0" />
       </button>
-
-      {/* Bottom: Dark "Call Us Now" Pill */}
-      <a
-        href={`tel:${SALON_INFO.phone}`}
-        className="pointer-events-auto px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-full bg-[#121212] text-[#F5F1E8] border border-white/20 hover:border-white/40 shadow-[0_8px_25px_rgba(0,0,0,0.5)] hover:bg-black active:scale-95 transition-all flex items-center gap-2 sm:gap-2.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.16em] cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 whitespace-nowrap"
-        aria-label={`Call salon directly at ${SALON_INFO.phone}`}
-        title="Call Us Now"
-      >
-        <Phone className="w-3.5 h-3.5 text-[#D4AF37] shrink-0" />
-        <span>Call Us Now</span>
-      </a>
     </aside>
   );
 }

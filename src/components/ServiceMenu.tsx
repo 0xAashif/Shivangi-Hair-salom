@@ -1,18 +1,18 @@
 import { useState } from 'react';
-import { Clock, Check, Plus, Minus } from 'lucide-react';
+import { Clock, Check, Plus, Minus, CalendarCheck, Scissors, Sparkles } from 'lucide-react';
 import { WhatsAppIcon } from './BrandIcons';
 import { SERVICES, SALON_INFO } from '../data/salonData';
 import { MACRO_VIDEOS } from '../config/videos';
-import { ServiceItem } from '../types';
 import { buildHinglishWhatsAppMessage, createWhatsAppUrl, openExternalUrl } from '../utils/booking';
 import MacroVideo from './MacroVideo';
-import TiltCard from './TiltCard';
+import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
+import { Button } from './ui/button';
 
 interface ServiceMenuProps {
-  onSelectServiceModal?: (serviceId: string) => void;
+  onSelectServiceModal: (serviceIds: string | string[]) => void;
 }
 
-export default function ServiceMenu({}: ServiceMenuProps) {
+export default function ServiceMenu({ onSelectServiceModal }: ServiceMenuProps) {
   const [activeCategory, setActiveCategory] = useState<'hair' | 'beard' | 'spa'>('hair');
   const [selectedIds, setSelectedIds] = useState<string[]>(['sig-cut']);
   const [expandedDetailsId, setExpandedDetailsId] = useState<string | null>(null);
@@ -31,12 +31,6 @@ export default function ServiceMenu({}: ServiceMenuProps) {
     );
   };
 
-  const handleBookSingleOnWhatsApp = (service: ServiceItem) => {
-    const msg = buildHinglishWhatsAppMessage(service.name);
-    const url = createWhatsAppUrl(SALON_INFO.rawPhone, msg);
-    openExternalUrl(url);
-  };
-
   const selectedItems = SERVICES.filter((s) => selectedIds.includes(s.id));
   const totalDuration = selectedItems.reduce((acc, s) => acc + s.durationMinutes, 0);
 
@@ -49,64 +43,66 @@ export default function ServiceMenu({}: ServiceMenuProps) {
   };
 
   return (
-    <section 
-      id="services" 
-      className="relative py-20 sm:py-28 bg-[#070709] border-b border-white/10 scroll-mt-20 overflow-hidden"
+    <section
+      id="services"
+      className="relative py-20 sm:py-28 bg-[#070709] text-[#F4F1EA] border-b border-white/10 scroll-mt-20 overflow-hidden"
     >
-      {/* Video 2: Macro Steaming Folded Black Hot Towel on dark wood grain (Lazy loaded via IntersectionObserver) */}
       <MacroVideo
         asset={MACRO_VIDEOS.serviceMenu}
         lazy={true}
-        className="w-full h-full object-cover object-center opacity-30"
-        overlayClassName="bg-gradient-to-b from-[#070709]/92 via-[#070709]/82 to-[#070709]/94"
+        className="w-full h-full object-cover object-center brightness-[0.82] opacity-40"
+        overlayClassName="bg-gradient-to-b from-[#070709]/84 via-[#070709]/60 to-[#070709]/88"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 w-[720px] h-[340px] bg-[radial-gradient(circle,rgba(197,160,89,0.14)_0%,transparent_70%)] z-0"
       />
 
-      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-8">
+        {/* Section Header + Category Tabs */}
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between mb-12 gap-6">
           <div className="space-y-3">
             <div className="flex items-center gap-3">
               <span className="w-8 h-[1px] bg-[#C5A059]" />
-              <span className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#C5A059]">
+              <Scissors className="w-3.5 h-3.5 text-[#C5A059] shrink-0" />
+              <span className="text-[11px] font-bold uppercase tracking-[0.26em] text-[#C5A059]">
                 Service Menu
               </span>
             </div>
-            <h2 className="font-display text-3xl sm:text-5xl font-bold text-[#F4F1EA] tracking-tight">
+            <h2 className="font-display text-3xl sm:text-5xl font-bold text-[#F4F1EA] tracking-tight text-balance">
               Haircut, Beard & Grooming Menu
             </h2>
-            <p className="text-xs sm:text-sm text-[#C2BCB0] max-w-xl">
+            <p className="text-xs sm:text-sm text-[#D6D1C7] max-w-xl leading-relaxed">
               <strong className="text-[#C5A059]">Starts from ₹100 · Negotiable based on style &amp; hair length.</strong> Every appointment includes a face-shape style check, UV-cleaned tools, a 100% fresh sealed blade, and warm towel prep.
             </p>
           </div>
 
-          {/* Horizontal Scrollable Category Pills on Mobile */}
-          <div className="flex items-center gap-1.5 p-1.5 rounded-xl bg-[#121214]/90 border border-white/10 overflow-x-auto no-scrollbar max-w-full shrink-0">
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => setActiveCategory(cat.id)}
-                className={`min-h-[44px] px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-transform duration-300 cursor-pointer whitespace-nowrap shrink-0 ${
-                  activeCategory === cat.id
-                    ? 'bg-[#F4F1EA] text-[#070709] shadow-sm'
-                    : 'text-[#A6A095] hover:text-[#F4F1EA]'
-                }`}
-              >
-                {cat.label}
-              </button>
-            ))}
-          </div>
+          <Tabs
+            value={activeCategory}
+            onValueChange={(val) => setActiveCategory(val as 'hair' | 'beard' | 'spa')}
+            className="shrink-0 w-full sm:w-auto"
+          >
+            <TabsList className="bg-[#121214]/95 border-white/15 flex-wrap sm:flex-nowrap w-full sm:w-auto justify-center">
+              {categories.map((cat) => (
+                <TabsTrigger
+                  key={cat.id}
+                  value={cat.id}
+                  className="text-[#B8B2A6] hover:text-[#F4F1EA] data-[state=active]:bg-[#F4F1EA] data-[state=active]:text-[#070709]"
+                >
+                  {cat.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
         </div>
 
-        {/* 3D Interactive Service Cards */}
-        <div className="space-y-4">
-          {/* Desktop Column Legend */}
-          <div className="hidden md:grid md:grid-cols-12 px-6 py-3 rounded-xl border border-white/10 text-[11px] font-bold uppercase tracking-[0.2em] text-[#C5A059] bg-[#121214]/85 backdrop-blur-sm">
-            <div className="col-span-5">Service Details</div>
-            <div className="col-span-2 text-center">Time Needed</div>
-            <div className="col-span-3 text-right">Pricing</div>
-            <div className="col-span-2 text-right">Book (WhatsApp)</div>
+        {/* Clean Hairline Service List */}
+        <div className="rounded-2xl border border-white/15 bg-[#101013]/88 backdrop-blur-md divide-y divide-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+          <div className="hidden md:grid md:grid-cols-12 px-6 py-3.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#C5A059]">
+            <div className="col-span-5">Service</div>
+            <div className="col-span-2 text-center">Duration</div>
+            <div className="col-span-3 text-right">Tariff</div>
+            <div className="col-span-2 text-right">Action</div>
           </div>
 
           {currentServices.map((service) => {
@@ -114,64 +110,62 @@ export default function ServiceMenu({}: ServiceMenuProps) {
             const isExpanded = expandedDetailsId === service.id;
 
             return (
-              <TiltCard
+              <div
                 key={service.id}
-                maxTilt={3}
-                className={`rounded-2xl p-5 sm:p-6 backdrop-blur-md transition-transform duration-300 border ${
-                  isSelected
-                    ? 'bg-[#171612]/95 border-[#C5A059]/60'
-                    : 'bg-[#121214]/90 border-white/10'
+                className={`p-5 sm:p-6 transition-colors ${
+                  isSelected ? 'bg-[#171510]/85' : 'hover:bg-white/[0.02]'
                 }`}
               >
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-                  
-                  {/* Col 1: Service Name & Description (5 cols) */}
+                  {/* Col 1: Selection & Title */}
                   <div className="md:col-span-5 space-y-1.5">
-                    <div className="flex items-center gap-2.5 flex-wrap">
+                    <div className="flex items-start gap-3">
                       <button
                         type="button"
                         onClick={() => toggleSelect(service.id)}
-                        className={`depth-layer-z w-5 h-5 rounded border flex items-center justify-center transition-transform duration-200 cursor-pointer shrink-0 ${
+                        className={`mt-1 w-5 h-5 rounded border flex items-center justify-center transition-colors cursor-pointer shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A059] ${
                           isSelected
                             ? 'bg-[#C5A059] border-[#C5A059] text-[#070709]'
-                            : 'border-white/25 bg-transparent'
+                            : 'border-white/30 bg-transparent hover:border-white/60'
                         }`}
-                        aria-label={`Select ${service.name} for calculation`}
-                        title="Select Service"
+                        aria-label={`Select ${service.name} for session`}
+                        aria-pressed={isSelected}
                       >
                         {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                       </button>
 
-                      <h3 className="depth-layer-z font-display text-base sm:text-lg font-bold text-[#F4F1EA]">
-                        {service.name}
-                      </h3>
+                      <div className="space-y-1">
+                        <div className="flex items-baseline gap-2.5 flex-wrap">
+                          <h3 className="font-display text-base sm:text-lg font-bold text-[#F4F1EA]">
+                            {service.name}
+                          </h3>
+                          {service.popular && (
+                            <span className="text-[11px] font-medium text-[#C5A059]">
+                              · Popular
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-[#B8B2A6] leading-relaxed">
+                          {service.shortDesc}
+                        </p>
 
-                      {service.popular && (
-                        <span className="depth-layer-z text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#C5A059]/15 text-[#C5A059] border border-[#C5A059]/35">
-                          Popular
-                        </span>
-                      )}
+                        <button
+                          type="button"
+                          onClick={() => setExpandedDetailsId(isExpanded ? null : service.id)}
+                          aria-expanded={isExpanded}
+                          className="text-xs font-medium text-[#C5A059] hover:underline cursor-pointer inline-flex items-center gap-1 pt-1"
+                        >
+                          <span>{isExpanded ? 'Hide What’s Included' : 'See What’s Included'}</span>
+                          {isExpanded ? <Minus className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
+                        </button>
+                      </div>
                     </div>
 
-                    <p className="text-xs text-[#B8B2A6] leading-relaxed pl-7">
-                      {service.shortDesc}
-                    </p>
-
-                    {/* Expand Inclusions toggle */}
-                    <button
-                      type="button"
-                      onClick={() => setExpandedDetailsId(isExpanded ? null : service.id)}
-                      className="text-[11px] font-semibold text-[#C5A059] hover:underline pl-7 cursor-pointer inline-flex items-center gap-1 pt-1"
-                    >
-                      <span>{isExpanded ? 'Hide What’s Included' : 'See What’s Included'}</span>
-                      {isExpanded ? <Minus className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
-                    </button>
-
                     {isExpanded && (
-                      <div className="mt-2.5 pl-7 pt-2 border-t border-white/10">
-                        <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px] text-[#C2BCB0]">
+                      <div className="mt-2 ml-8 pt-3 border-t border-white/10">
+                        <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs text-[#D6D1C7]">
                           {service.inclusions.map((inc, i) => (
-                            <li key={i} className="flex items-start gap-1.5">
+                            <li key={i} className="flex items-start gap-2">
                               <Check className="w-3.5 h-3.5 text-[#C5A059] shrink-0 mt-0.5 stroke-[2]" />
                               <span>{inc}</span>
                             </li>
@@ -181,87 +175,76 @@ export default function ServiceMenu({}: ServiceMenuProps) {
                     )}
                   </div>
 
-                  {/* Col 2: Duration Badge (2 cols) */}
-                  <div className="md:col-span-2 flex md:justify-center items-center gap-1.5 text-xs text-[#C2BCB0] pl-7 md:pl-0">
-                    <Clock className="depth-layer-z w-3.5 h-3.5 text-[#C5A059] stroke-[1.5]" />
-                    <span className="font-mono font-medium">{service.durationMinutes} Mins</span>
+                  {/* Col 2: Duration */}
+                  <div className="md:col-span-2 flex md:justify-center items-center gap-1.5 text-xs text-[#C2BCB0] pl-8 md:pl-0">
+                    <Clock className="w-3.5 h-3.5 text-[#C5A059] stroke-[1.5]" />
+                    <span className="font-mono tabular-nums">{service.durationMinutes} min</span>
                   </div>
 
-                  {/* Col 3: Starts from ₹100 · Negotiable (3 cols) */}
-                  <div className="md:col-span-3 flex md:justify-end items-center pl-7 md:pl-0">
-                    <span className="depth-layer-z inline-flex items-center px-3 py-1 rounded-lg bg-[#C5A059]/15 border border-[#C5A059]/40 font-mono text-xs sm:text-sm font-bold text-[#F4F1EA]">
+                  {/* Col 3: Clean Unboxed Pricing */}
+                  <div className="md:col-span-3 flex md:justify-end items-center pl-8 md:pl-0">
+                    <span className="font-mono text-xs sm:text-sm font-semibold text-[#F4F1EA] tabular-nums">
                       Starts from ₹100 · Negotiable
                     </span>
                   </div>
 
-                  {/* Col 4: Scaled-down Circular Green WhatsApp Action (2 cols) */}
-                  <div className="md:col-span-2 flex justify-end items-center pl-7 md:pl-0">
-                    <button
+                  {/* Col 4: Clear Single-Line Action */}
+                  <div className="md:col-span-2 flex md:justify-end items-center pl-8 md:pl-0">
+                    <Button
                       type="button"
-                      onClick={() => handleBookSingleOnWhatsApp(service)}
-                      className="depth-layer-z cta-circle w-11 h-11 bg-[#25D366] text-white hover:bg-[#20BA59] shadow-md cursor-pointer flex items-center justify-center shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#25D366]/40"
-                      aria-label={`Book ${service.name} on WhatsApp`}
-                      title={`Book ${service.name} via WhatsApp`}
+                      variant="brass"
+                      size="sm"
+                      onClick={() => onSelectServiceModal(service.id)}
+                      className="uppercase text-[11px] tracking-wider"
                     >
-                      <WhatsAppIcon className="w-5 h-5 text-white shrink-0" />
-                    </button>
+                      Book
+                    </Button>
                   </div>
-
                 </div>
-              </TiltCard>
+              </div>
             );
           })}
         </div>
 
-        {/* Minimalist Session Planner Strip with "Starts from ₹100 · Negotiable based on style & hair length" */}
-        <div className="mt-8 rounded-2xl bg-[#121214]/90 backdrop-blur-md border border-white/10 p-5 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-sm">
-          <div className="space-y-1 text-center sm:text-left">
-            <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#C5A059]">
-              Your Selected Services
+        {/* Minimalist Session Planner Summary */}
+        <div className="mt-6 rounded-2xl bg-[#121214]/95 border border-white/15 p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+          <div className="space-y-1">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#C5A059]">
+              <Sparkles className="w-3.5 h-3.5 shrink-0" />
+              <span>Your Session Plan</span>
             </span>
-            <p className="font-display text-sm sm:text-base font-bold text-[#F4F1EA]">
-              {selectedItems.length} Service{selectedItems.length === 1 ? '' : 's'} Selected · Starts from ₹100 · Negotiable based on style &amp; hair length
+            <p className="font-display text-base sm:text-lg font-bold text-[#F4F1EA] tabular-nums">
+              {selectedItems.length} Service{selectedItems.length === 1 ? '' : 's'} Selected · ~{totalDuration} min · Starts from ₹100
             </p>
-            <p className="text-[11px] text-[#B8B2A6] max-w-xl">
-              {selectedItems.map((s) => `${s.name} (Starts from ₹100 · Negotiable)`).join(' + ') || 'Select one or more services above to plan your session.'}
+            <p className="text-xs text-[#B8B2A6] max-w-xl">
+              {selectedItems.map((s) => s.name).join(' + ') || 'Select one or more services above to build your session.'}
             </p>
           </div>
 
-          <div className="flex items-center gap-6 shrink-0">
-            <div className="text-right">
-              <span className="text-[10px] text-[#A6A095] uppercase tracking-wider block font-semibold">
-                Total Time
-              </span>
-              <span className="font-mono text-sm sm:text-base font-bold text-[#F4F1EA] tabular-nums">
-                ~{totalDuration} Mins
-              </span>
-            </div>
+          <div className="flex flex-wrap items-center gap-3 shrink-0">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={selectedItems.length === 0}
+              onClick={() => onSelectServiceModal(selectedIds)}
+              className="border-white/20 text-[#F4F1EA] hover:bg-white/10 uppercase text-xs tracking-wider"
+            >
+              <CalendarCheck className="w-4 h-4 shrink-0" />
+              <span>Schedule Slot</span>
+            </Button>
 
-            <div className="text-right">
-              <span className="text-[10px] text-[#A6A095] uppercase tracking-wider block font-semibold">
-                Pricing
-              </span>
-              <span className="font-mono text-xs sm:text-sm font-bold text-[#C5A059]">
-                Starts from ₹100 · Negotiable
-              </span>
-            </div>
-
-            {/* Circular Green WhatsApp CTA for selection */}
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={handleBookSelectionOnWhatsApp}
-                disabled={selectedItems.length === 0}
-                className="cta-circle w-11 h-11 bg-[#25D366] text-white shadow-lg hover:bg-[#20BA59] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center shrink-0 focus:outline-none"
-                aria-label="Send selection to WhatsApp"
-                title="Book selected services via WhatsApp"
-              >
-                <WhatsAppIcon className="w-5 h-5 text-white shrink-0" />
-              </button>
-            </div>
+            <Button
+              type="button"
+              variant="whatsapp"
+              disabled={selectedItems.length === 0}
+              onClick={handleBookSelectionOnWhatsApp}
+              className="uppercase text-xs tracking-wider"
+            >
+              <WhatsAppIcon className="w-4 h-4 text-white shrink-0" />
+              <span>WhatsApp Now</span>
+            </Button>
           </div>
         </div>
-
       </div>
     </section>
   );

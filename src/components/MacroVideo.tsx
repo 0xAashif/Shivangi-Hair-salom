@@ -72,7 +72,7 @@ export default function MacroVideo({
   return (
     <div
       ref={containerRef}
-      className="absolute inset-0 w-full h-full overflow-hidden bg-gradient-to-br from-[#0E0E12] via-[#070709] to-[#121214] pointer-events-none select-none"
+      className="absolute inset-0 z-0 w-full h-full overflow-hidden bg-gradient-to-br from-[#0E0E12] via-[#070709] to-[#121214] pointer-events-none select-none"
     >
       {shouldLoad && (
         <video
